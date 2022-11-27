@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+{% extends "ahadis/base.html" %}
+{% block content %}
+{% load static %}
+<link href="{% static 'ahadis/show.css' %}" rel="stylesheet"/>
+<div id="MainContainer">
+    <div id="FehrestAyat" class="Column">
+            فهرست آیات
+        <div>
+            <button id="AyatSubjectButton" class="AyatFehrestButtons" onclick="showAyatSubject()">موضوعی</button>
+            <button id="AyatSerialButton" class="AyatFehrestButtons" onclick="showAyatSerial()">سوره ها</button>
+        </div>
+        <div id="AyatSubject">
+            subject
+            <ul class="tree">
+            {% for ayat_key1, ayat_value1 in fehrest.items %}
+            <li class="section">
+                <input type="checkbox" id="{{ayat_key1}}"/>
+                <label for="{{ayat_key1}}">{{ayat_key1}}</label>
+                <ul>
+                    {% for ayat_key2, ayat_value2 in ayat_value1.items %}
+                    <form action="{% url 'ahadis:filter_ahadis_from_fehrest_subject' %}" method="post">
+                        <li class="section">
+                            {% csrf_token %}
+                            <input name="Subject" value="{{ayat_key2}}" type="checkbox" id="{{ayat_key2}}"/>
+                            <label for="{{ayat_key2}}">{{ayat_key2}}</label>
+                            <Button name="Subject" value="{{ayat_key2}}" onclick="">نمایش تمام احادیث این موضوع</Button>
+                            <ul>
+                                {% for ayat_value3 in ayat_value2 %}
+                                <li>
+                                    <form action="{% url 'ahadis:filter_ahadis_from_fehrest' %}" method="post">
+                                        {% csrf_token %}
+                                        <Button name="had_id" value="{{ayat_value3.had_id}}" onclick="">
+                                            {{ayat_value3.summary}}
+                                        </Button>
+                                    </form>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    </form>
+
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+        </div>
+        <div id="AyatSerial">
+            Serial
+            <ul class="tree">
+            {% for ayat_serial_key, ayat_serial_value in ayat_fehrest_serial.items %}
+            <li class="section">
+                <input type="checkbox" id="{{ayat_serial_key}}"/>
+                <label for="{{ayat_serial_key}}">{{ayat_serial_key}}</label>
+                <ul>
+                    {% for ayat_serial_no in ayat_serial_value %}
+                    <form action="{% url 'ahadis:filter_ahadis_from_fehrest_subject' %}" method="post">
+                        <li class="section">
+                            {% csrf_token %}
+                            <input name="AyeNo" value="{{ayat_serial_no}}" type="checkbox" id="{{ayat_serial_no}}"/>
+                            <label for="{{ayat_serial_no}}">{{ayat_serial_no}}</label>
+                            <Button name="Subject" value="{{ayat_key2}}" onclick="">احادیث این آیه</Button>
+                        </li>
+                    </form>
+
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+        </div>
+
+    </div>
+    <div id="ShowBox" class="Column">
+        {% for hadis in ahadis %}
+        <p class="HadisMeta">{{hadis.Boo_Title}} چاپ {{hadis.Boo_Publisher}} جلد {{hadis.Had_BookVolNo}} صفحه
+            {{hadis.Had_BookPageNo}}</p>
+        <p id="hadis{{forloop.counter}}" class="Hadis">
+            {{hadis.Had_Text}}
+        </p>
+        {% endfor %}
+    </div>
+    <div id="Fehrest" class="Column">
+        فهرست مطالب
+        <ul class="tree">
+            {% for key1, value1 in fehrest.items %}
+            <li class="section">
+                <input type="checkbox" id="{{key1}}"/>
+                <label for="{{key1}}">{{key1}}</label>
+                <ul>
+                    {% for key2, value2 in value1.items %}
+                    <form action="{% url 'ahadis:filter_ahadis_from_fehrest_subject' %}" method="post">
+                        <li class="section">
+                            {% csrf_token %}
+                            <input name="Subject" value="{{key2}}" type="checkbox" id="{{key2}}"/>
+                            <label for="{{key2}}">{{key2}}</label>
+                            <Button name="Subject" value="{{key2}}" onclick="">نمایش تمام احادیث این موضوع</Button>
+                            <ul>
+                                {% for value3 in value2 %}
+                                <li>
+                                    <form action="{% url 'ahadis:filter_ahadis_from_fehrest' %}" method="post">
+                                        {% csrf_token %}
+                                        <Button name="had_id" value="{{value3.had_id}}" onclick="">{{value3.summary}}
+                                        </Button>
+                                    </form>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    </form>
+
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<div id="SearchHaidsContainer" class="CenterText">
+    جستجوی حدیث
+    <br>
+    <form class="FlexRow" action="{% url 'ahadis:search' %}" method="post">
+        {% csrf_token %}
+        <div>
+            شامل کلمات زیر
+            <input class="InputFour" type="text" name="word1"/>
+            <input class="InputFour" type="text" name="word2"/>
+            <input class="InputFour" type="text" name="word3"/>
+            <input class="InputFour" type="text" name="word4"/>
+        </div>
+        <div class="mr10">
+            شامل موضوعات زیر
+            <input class="InputFour mr10" type="text" name="subject1"/>
+            <input class="InputFour mr10" type="text" name="subject2"/>
+            <input class="InputFour" type="text" name="subject3"/>
+            <input class="InputFour" type="text" name="subject4"/>
+        </div>
+        <Button id="SubmitButton" onclick="">جستجو</Button>
+    </form>
+</div>
+    <script src="{% static 'ahadis/show.js' %}"></script>
+{% endblock content %}

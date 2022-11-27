@@ -1,0 +1,107 @@
+@font-face {
+  font-family: Badr;
+  src: url(Badr.ttf);
+}
+@font-face {
+  font-family: Mitra;
+  src: url(Mitra.ttf);
+}
+body{
+    font-family: Badr;
+}
+.FloatLeft{
+    float: left;
+}
+input[type=button], Button{
+    cursor: pointer;
+}
+#HeaderContainer {
+    background-color: green;
+    border: 2px solid black;
+    text-align: center;
+}
+#HeaderContent{
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+}
+.InputOne {
+    width: 140px;
+}
+#Masoum{
+    width: 200px;
+}
+.InputSubject{
+    width:70px;
+}
+#SummaryContainer{
+    height: 1000px;
+}
+#FehrestSummaryContainer,#ContainingAyatContainer, #FehrestSummaryAyatContainer, #RelatedExplanationContainer{
+    border: 1px solid gray;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+    width: 370px;
+    padding: 5px;
+    text-align: center;
+}
+#ContainingAyatContainer{
+    width: 135px;
+}
+#FehrestSummaryAyatContainer{
+    width: 480px;
+}
+#RelatedExplanationContainer{
+    width: 270px;
+}
+#FehrestSummaryContainerTitle{
+    flex-basis: 400px;
+}
+#ContainingAyatContainerTitle{
+    flex-basis: 120px;
+}
+#FehrestSummaryAyatContainerTitle{
+    flex-basis: 500px;
+}
+#RelatedExplanationContainerTitle{
+    flex-basis: 200px;
+}
+.FehrestSummaryObject Input{
+    width:40px;
+}
+#FehrestSummaryObject20 ~ .FehrestSummaryObject, #ContainingAyatObject10 ~ .FehrestSummaryObject,
+#FehrestSummaryAyatObject20 ~ .FehrestSummaryObject, #RelatedExplanationObject20 ~ .FehrestSummaryObject {
+    display: none;
+}
+input:hover{
+    background-color: #00ff00;
+}
+#ButtonsBelow{
+    width: 400px;
+    cursor: pointer;
+    margin: 5px auto;
+}
+#MoreSummariesBoxes2{
+    display: none;
+}
+#SubmitButton{
+    margin: 5px auto;
+}
+#RepeatBoxDiv{
+    display: none;
+    position: fixed;
+    top: 100px;
+    left: 400px;
+    border: 10px solid gray;
+    width: 400px;
+    padding: 20px;
+    background-color: #EEEEEE;
+}
+#RepeatBoxHadisText{
+    width: 400px;
+    height: 50px;
+}
+#RepeatBoxHadisText:hover{
+    background-color: white;
+}

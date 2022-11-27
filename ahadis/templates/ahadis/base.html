@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>کلام نور</title>
+    {% load static %}
+    <link href="{% static 'ahadis/index.css' %}" rel="stylesheet"/>
+</head>
+<body>
+<div id="HeaderContainer">
+    <div id="HeaderContent"> جنة المأوی</div>
+    <div id="MainButtons">
+        <a href="{% url 'ahadis:save_book_page' %}">
+            <Button id="SaveBookButton" onclick="">ذخیره کتاب</Button>
+        </a>
+        <a href="{% url 'ahadis:show' %}">
+            <Button id="ShowButton" onclick="">نمایش حدیث ها</Button>
+        </a>
+        <a href="{% url 'ahadis:save_hadis_page' %}">
+            <Button id="SaveHadisButton" onclick="">ذخیره حدیث</Button>
+        </a>
+    </div>
+</div>
+{% block content %}
+{% endblock content %}
+{% block js %}
+{% endblock js %}
+    <script src="{% static 'ahadis/base.js' %}"></script>
+</body>
+</html>

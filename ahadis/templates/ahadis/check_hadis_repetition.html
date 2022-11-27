@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+{% extends "ahadis/base.html" %}
+{% block content %}
+{% load static %}
+<link href="{% static 'ahadis/check_hadis_repetition.css' %}" rel="stylesheet"/>
+<div id="intersection">
+    <h3>
+       : {{ result_text_1 }}
+    </h3>
+    <div>
+        {{ intersection_hadis }}
+    </div>
+</div>
+<div id="database">
+    <h3>
+       : {{ result_text_2 }}
+    </h3>
+    <div>
+        {{ other }}
+    </div>
+</div>
+{% endblock content %}

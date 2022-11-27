@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+{% extends "ahadis/base.html" %}
+{% load static %}
+{% block content %}
+{% load static %}
+    <link href="{% static 'ahadis/save_hadis.css' %}" rel="stylesheet"/>
+    <form id="SaveAhadis" action="{% url 'ahadis:save_hadis' %}" method="post">
+        {% csrf_token %}
+                    اطلاعات شناسنامه ای حدیث
+        <br>
+            <input class="InputOne" placeholder="نام حدیث" type="text" name="HadisName"/>
+           <select id="Masoum" class="InputOne" name="MasoumID">
+                {% for masoum in masoumin %}
+                    <option class="InputOne" value="{{masoum.MasoumID}}">{{masoum.MasoumName}}</option>
+                {% endfor %}
+            </select>
+            <input class="InputOne" placeholder="راویان حدیث" type="text" name="HadisNarrators"/>
+            <input class="InputOne" placeholder="متن حدیث" type="text" name="HadisText"/>
+            <select class="InputOne" name="BookID">
+                {% for book in books %}
+                    <option class="InputOne" value="{{book.Boo_ID}}">{{book.Boo_Title}}</option>
+                {% endfor %}
+            </select>
+            <input class="InputOne" placeholder="شماره جلد کتاب" type="text" name="BookVolNo"/>
+            <input class="InputOne" placeholder="شماره صفحه" type="text" name="BookPageNo"/>
+            <input class="InputOne" placeholder="شماره حدیث" type="text" name="BookHadisNo"/>
+            <br>
+            موضوعات مرتبط با حدیث
+            <br>
+            {% for i in subjects_counter %}
+                <input class="InputSubject" type="text" name="HadisSubject{{i}}"/>
+            {% endfor %}
+            <br>
+        <div id="SummaryContainer">
+            <div class="FloatLeft" id="FehrestSummaryContainer">
+                <div id="FehrestSummaryContainerTitle">خلاصه ها و فهرست</div>
+                {% for i in summaries_counter %}
+                <div id="FehrestSummaryObject{{i}}" class="FehrestSummaryObject">
+                    {{forloop.counter}}-
+                    <input type="text" placeholder="حرف الفبا" name="Alphabet{{i}}"/>
+                    <input type="text" placeholder="موضوع" name="Subject{{i}}"/>
+                    <input type="text" placeholder="خلاصه" name="Text{{i}}"/>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="FloatLeft" id="ContainingAyatContainer">
+                <div id="ContainingAyatContainerTitle">آیات موجود در حدیث</div>
+               {% for i in summaries_containing_ayat_counter %}
+                <div id="ContainingAyatObject{{i}}" class="FehrestSummaryObject">
+                    {{forloop.counter}}-
+                    <input type="text" placeholder="سوره" name="ContainingAyatSoore{{i}}"/>
+                    <input type="text" placeholder="آیه" name="ContainingAyatAye{{i}}"/>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="FloatLeft" id="FehrestSummaryAyatContainer">
+                 <div id="FehrestSummaryAyatContainerTitle">فهرست آیات</div>
+               {% for i in summaries_ayat_counter %}
+                <div id="FehrestSummaryAyatObject{{i}}" class="FehrestSummaryObject">
+                {{forloop.counter}}-
+                <input type="text" placeholder="سوره" name="FehrestSoore{{i}}"/>
+                <input type="text" placeholder="شماره آیه" name="FehrestAyeNo{{i}}"/>
+                <input type="text" placeholder="متن آیه" name="FehrestAyeText{{i}}"/>
+                <input type="text" placeholder="توضیح" name="FehrestAyeDesc{{i}}"/>
+
+            </div>
+            {% endfor %}
+        </div>
+            <div class="FloatLeft" id="RelatedExplanationContainer">
+                 <div id="RelatedExplanationContainerTitle">توضیحات مرتبط</div>
+               {% for i in related_explanation_counter %}
+                <div id="RelatedExplanationObject{{i}}" class="FehrestSummaryObject">
+                {{forloop.counter}}-
+                <input type="text" placeholder="عبارت" name="Expression{{i}}"/>
+                <input type="text" placeholder="توضیح" name="Explanation{{i}}"/>
+            </div>
+            {% endfor %}
+        </div>
+            <div class="" id="ButtonsBelow">
+                <input type="button" id="MoreSummariesBoxes1" value="نمایش بیشتر برای خلاصه ها" onclick="showMoreBoxes1()">
+                <input type="button" id="MoreSummariesBoxes2" value="نمایش بیشتر برای خلاصه ها" onclick="showMoreBoxes2()">
+                <input type="button" id="CheckForHadisRepetition" value="بررسی تکراری بودن حدیث" onclick="showRepeatBox()">
+                <Button id="SubmitButton" form="SaveAhadis" onclick="">ذخیره</Button>
+            </div>
+        </div>
+    </form>
+    <div id="RepeatBoxDiv">
+        <form id="RepeatBoxForm"  action="{% url 'ahadis:check_hadis_repetition' %}" method="post">
+            {% csrf_token %}
+            <input id="RepeatBoxHadisText" type="text" placeholder="متن حدیث" name="HadisTextForRepetition"/>
+            <br>
+            <input type="button" id="CloseRepetitionBox" value="بستن" onclick="closeRepeatBox()">
+            <Button id="SubmitButtonRepetition" form="RepeatBoxForm" onclick="">بررسی</Button>
+        </form>
+    </div>
+{% endblock content %}
+{% block js %}
+    <script src="{% static 'ahadis/index.js' %}"></script>
+{% endblock js %}
+
+

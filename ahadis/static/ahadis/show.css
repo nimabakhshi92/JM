@@ -1,0 +1,134 @@
+.FlexRow{
+    display: flex;
+    direction: row;
+    justify-content: space-around;
+}
+.mr10{
+    margin-right: 140px;
+}
+.CenterText{
+    text-align: center;
+}
+#MainContainer{
+    margin-top: 5px;
+    text-align: center;
+    display: flex;
+}
+.Column{
+    border: 1px solid gray;
+    padding: 5px;
+    max-height: 450px;
+    overflow-y: scroll;
+}
+#ShowButton{
+    background-color: #00FF00;
+}
+#ShowBox{
+    text-align: center;
+    width: 850px;
+    font-size: 20px;
+    font-weight: bold;
+}
+#Fehrest, #FehrestAyat{
+    width: 350px;
+    direction: rtl;
+}
+#Fehrest ul, #FehrestAyat ul{
+    text-align: right;
+}
+#AyatSerial{
+    display: none;
+}
+.Hadis{
+    border-bottom: 1px solid gray;
+}
+.HadisMeta{
+    font-weight: bold;
+    font-size: 110%;
+    color: gray;
+}
+.InputThree{
+    width: 60px;
+    margin: auto;
+    margin-top: 5px;
+    display:block;
+}
+.InputFour{
+    width: 60px;
+    margin: auto;
+    margin-top: 0px;
+    display: inline-block;
+}
+#SearchHaidsContainer{
+    direction: rtl;
+    border:1px solid gray;
+    margin-top: 20px;
+}
+#SubmitButton{
+    margin: auto;
+    margin-top: 5px;
+    display:block;
+    width: 80px;
+    background-color: green;
+    color: white;
+}
+.Hadis{
+    color:blue;
+}
+.AyatFehrestButtons{
+width: 135px;
+margin: 0;
+}
+#AyatSubjectButton{
+    background-color: green;
+}
+
+/* (A) LIST TO MENU */
+.tree, .section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tree {
+  background: #fbfbfb;
+  border: 1px solid #d2d2d2;
+}
+.tree li {
+  border-bottom: 1px solid #d2d2d2;
+  padding: 15px 10px;
+}
+.tree li:last-child {
+  border: 0;
+}
+
+/* (B) SUB-SECTIONS */
+/* (B1) TOGGLE SHOW/HIDE */
+.section ul { display: none; }
+.section input:checked ~ ul { display: block; }
+
+/* (B2) HIDE CHECKBOX */
+.section input[type=checkbox] { display: none; }
+
+/* (B3) ADD EXPAND/COLLAPSE ICON  */
+.section {
+  position: relative;
+  padding-left: 35px !important;
+}
+.section label:after {
+  content: "\0002B";
+  position: absolute;
+  top: 0; left: 0;
+  padding: 10px;
+  text-align: center;
+  font-size: 30px;
+  color: #f00;
+  transition: all 0.5s;
+}
+.section input:checked ~ label:after {
+  color: #23c37a;
+  transform: rotate(45deg);
+}
+
+/* (B4) SUB-SECTION ITEMS */
+.section ul { margin-top: 10px; }
+.section ul li { color: #d43d3d; }

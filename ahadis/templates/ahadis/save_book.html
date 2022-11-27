@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+{% extends "ahadis/base.html" %}
+{% block content %}
+{% load static %}
+    <link href="{% static 'ahadis/save_book.css' %}" rel="stylesheet"/>
+        <form action="{% url 'ahadis:save_book' %}" method="post">
+            {% csrf_token %}
+
+            <input class="InputOne" placeholder="نام کتاب" type="text" name="Name"/>
+            <input class="InputOne" placeholder="چاپ" type="text" name="Publisher"/>
+            <input class="InputOne" placeholder="مولف" type="text" name="Author"/>
+            <input class="InputOne" placeholder="موضوع" type="text" name="Subject"/>
+            <input class="InputOne" placeholder="زبان" type="text" name="Language"/>
+            <Button id="SubmitButton" onclick="">ذخیره</Button>
+        </form>
+{% endblock content %}
