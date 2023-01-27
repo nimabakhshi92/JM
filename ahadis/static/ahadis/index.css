@@ -1,3 +1,7 @@
+*{
+    margin: 0;
+    padding: 0;
+}
 @font-face {
   font-family: Badr;
   src: url(Badr.ttf);
@@ -8,6 +12,19 @@
 }
 body{
     font-family: Badr;
+    font-size: 16px;
+    width: 98%;
+    margin: auto;
+}
+input, select, button{
+    border-radius: 5px;
+    padding: 10px;
+    border: 1px solid #080;
+    background-color: white;
+}
+p{
+    font-size: 1rem;
+    font-weight: 700;
 }
 .FloatLeft{
     float: left;
@@ -22,28 +39,35 @@ input[type=button], Button{
 }
 #HeaderContent{
     color: white;
-    font-size: 30px;
+    font-size: 20px;
     font-weight: bold;
 }
 .InputOne {
     width: 140px;
+    display: inline-block;
+    margin-bottom: 10px;
 }
 #Masoum{
     width: 200px;
 }
 .InputSubject{
     width:70px;
+    display: inline-block;
+    margin-bottom: 10px;
 }
 #SummaryContainer{
     height: 1000px;
 }
 #FehrestSummaryContainer,#ContainingAyatContainer, #FehrestSummaryAyatContainer, #RelatedExplanationContainer{
     border: 1px solid gray;
-    display: flex;
-    flex-wrap: wrap;
-    column-gap: 10px;
-    width: 370px;
     padding: 5px;
+    text-align: center;
+}
+.verse-info, .verse-subject, .FehrestSummaryContainer{
+    background-color: #f8f8f8;
+    border: 1px solid gray;
+    padding: 4px;
+    margin-top: 10px;
     text-align: center;
 }
 #ContainingAyatContainer{
@@ -52,12 +76,7 @@ input[type=button], Button{
 #FehrestSummaryAyatContainer{
     width: 480px;
 }
-#RelatedExplanationContainer{
-    width: 270px;
-}
-#FehrestSummaryContainerTitle{
-    flex-basis: 400px;
-}
+
 #ContainingAyatContainerTitle{
     flex-basis: 120px;
 }
@@ -67,26 +86,79 @@ input[type=button], Button{
 #RelatedExplanationContainerTitle{
     flex-basis: 200px;
 }
-.FehrestSummaryObject Input{
-    width:40px;
+.FehrestSummaryObject{
+    display: flex;
+    justify-content: space-around;
+    margin-top: 5px;
+}
+.FehrestSummaryObjectInput{
+    width:45%;
+}
+.FehrestSummaryObject a{
+    background-color: #75c752;
+    padding: 5px;
+    cursor:pointer;
+    border: 1px solid gray;
+    border-radius: 10px;
+
+}
+.FehrestSummaryObject a:hover{
+    background-color: #080;
+}
+
+.fehrest-input{
+    display: inline-block;
+    width: 100px;
+}
+.fehrest-subject-input{
+    width: 50px;
+}
+.fehrest-alphabet-input{
+    width: 40px;
+}
+.verse_text{
+    display: inline-block;
+    width: 450px;
 }
 #FehrestSummaryObject20 ~ .FehrestSummaryObject, #ContainingAyatObject10 ~ .FehrestSummaryObject,
 #FehrestSummaryAyatObject20 ~ .FehrestSummaryObject, #RelatedExplanationObject20 ~ .FehrestSummaryObject {
     display: none;
 }
+#copy1{
+    visibility: hidden;
+}
 input:hover{
-    background-color: #00ff00;
+    background-color: rgba(60, 255, 60, 0.3);
+    border-box: 2px;
+    transition: all 0.3s linear;
 }
 #ButtonsBelow{
-    width: 400px;
     cursor: pointer;
-    margin: 5px auto;
+    margin: 10px auto;
+    padding: 5px 300px;
+    display: flex;
+    justify-content: space-around;
+    border: 1px solid gray;
+    border-radius: 10px;
+ }
+#ButtonsBelow button, #ButtonsBelow input{
+    width: 30%;
+    font-size: 16px;
+    border: 1px solid #080;
+    background-color: white;
+ }
+#ButtonsBelow button:hover, #ButtonsBelow input:hover{
+    background-color: #75c752;
 }
 #MoreSummariesBoxes2{
     display: none;
 }
 #SubmitButton{
     margin: 5px auto;
+        border-radius: 5px;
+    padding: 16px;
+    border: 1px solid #080;
+    background-color: white;
 }
 #RepeatBoxDiv{
     display: none;

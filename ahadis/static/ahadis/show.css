@@ -31,6 +31,7 @@
 }
 #Fehrest, #FehrestAyat{
     width: 350px;
+    min-height: 450px;
     direction: rtl;
 }
 #Fehrest ul, #FehrestAyat ul{
@@ -95,12 +96,20 @@ margin: 0;
 }
 .tree li {
   border-bottom: 1px solid #d2d2d2;
-  padding: 15px 10px;
+  padding: 1px 10px;
 }
 .tree li:last-child {
   border: 0;
 }
 
+li:hover{
+    background-color: rgba(90, 255, 90, 0.3);
+    cursor: pointer
+}
+label{
+    width: 100%;
+    display: inline-block;
+}
 /* (B) SUB-SECTIONS */
 /* (B1) TOGGLE SHOW/HIDE */
 .section ul { display: none; }
@@ -112,17 +121,20 @@ margin: 0;
 /* (B3) ADD EXPAND/COLLAPSE ICON  */
 .section {
   position: relative;
-  padding-left: 35px !important;
+  padding-left: 7px !important;
 }
 .section label:after {
   content: "\0002B";
   position: absolute;
   top: 0; left: 0;
-  padding: 10px;
+  padding: 5px;
   text-align: center;
-  font-size: 30px;
+  font-size: 20px;
   color: #f00;
   transition: all 0.5s;
+}
+.section label:hover{
+    cursor: pointer;
 }
 .section input:checked ~ label:after {
   color: #23c37a;
@@ -130,5 +142,15 @@ margin: 0;
 }
 
 /* (B4) SUB-SECTION ITEMS */
-.section ul { margin-top: 10px; }
+.section ul { margin-top: 0px; }
 .section ul li { color: #d43d3d; }
+
+.fehrest-btn{
+    background: transparent;
+    font-size: 0.7rem;
+    border: none;
+    padding: 3px;
+}
+.fehrest-btn:hover{
+    border: 1px solid black;
+}

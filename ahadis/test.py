@@ -7,7 +7,7 @@ for para in doc.paragraphs:
     for run in para.runs:
         new_run = new_paragraph.add_run(run.text + ' ')
         new_run.font.color.rgb = run.font.color.rgb
-copy_doc.save_hadis('copy_doc111.docx')
+copy_doc.save_narration('copy_doc111.docx')
 
 print(doc.paragraphs[1].runs[1])
 

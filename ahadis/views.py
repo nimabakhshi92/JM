@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 import pyodbc
@@ -6,21 +6,55 @@ import pandas as pd
 import numpy as np
 import json
 from .utils import conn
+from .models import *
+from .serializers import *
 
-
+# def save_imam(request):
+#     imams_names = [
+#         'حضرت پیامبر صلی الله علیه و آله',
+#         'حضرت امیرالمومنین علیه السلام',
+#         'حضرت زهرا سلام الله علیها',
+#         'امام حسن علیه السلام',
+#         'امام حسین علیه السلام',
+#         'امام سجاد علیه السلام',
+#         'امام باقر علیه السلام',
+#         'امام صادق علیه السلام',
+#         'امام کاظم علیه السلام',
+#         'امام رضا علیه السلام',
+#         'امام جواد علیه السلام',
+#         'امام هادی علیه السلام',
+#         'امام حسن عسکری علیه السلام',
+#         'امام زمان علیه السلام',
+#         'نامشخص',
+#     ]
+#     for imam_name in imams_names:
+#         imam = Imam(name=imam_name)
+#         imam.save()
 
 # Create your views here.
-def save_hadis_page(request):
-    df = pd.read_sql_query('select * from dbo.Book', conn)
-    df_json_str = df.to_json(orient="records")
-    df_json = json.loads(df_json_str)
-
-    masoumin = get_masoumin()
+def save_narration_page(request):
+    books = get_books()
+    imams = get_Imams()
+    quran_verse = list(QuranVerse.objects.all().order_by('surah_no', 'verse_no').values())
+    print(quran_verse)
+    surah_names = []
+    for verse in quran_verse:
+        if verse['surah_name'] not in surah_names:
+            surah_names.append((verse['surah_name']))
+    # print(surah_names)
     return render(request, 'ahadis/save_hadis.html',
-                  {'books': df_json, 'masoumin': masoumin,
-                   'summaries_counter': range(1, 71), 'subjects_counter': range(1, 16),
+                  {'books': books, 'masoumin': imams,
+                   'summaries_counter': range(1, 71), 'subjects_counter': range(1, 31),
                    'summaries_ayat_counter': range(1, 71), 'summaries_containing_ayat_counter': range(1, 36),
-                   'related_explanation_counter': range(1, 71)})
+                   'related_explanation_counter': range(1, 71),
+                   'quran': {'quran': quran_verse},
+                   'surah_names': surah_names,
+                   })
+
+
+def get_books():
+    books = Book.objects.all().values()
+    return books
 
 
 def get_intersection_of_hadis_to_others(hadis, others):
@@ -73,89 +107,125 @@ def check_hadis_repetition(request):
                    'intersection_hadis': intersection_hadis, 'other': other})
 
 
-def save_hadis(request):
+def save_narration(request):
     hadis_text = request.POST['HadisText']
-    hadis_text = hadis_text if hadis_text else 'NULL'
     hadis_name = request.POST['HadisName']
-    hadis_name = hadis_name if hadis_name else 'NULL'
-    masoum_id = request.POST['MasoumID']
-    masoum_id = masoum_id if masoum_id else 'NULL'
-    hadis_narrators = request.POST['HadisNarrators']
-    hadis_narrators = hadis_narrators if hadis_narrators else 'NULL'
+    narrators = request.POST['HadisNarrators']
     book_vol_no = request.POST['BookVolNo']
-    book_vol_no = book_vol_no if book_vol_no else 'NULL'
+    book_vol_no = int(book_vol_no) if book_vol_no else None
     book_page_no = request.POST['BookPageNo']
-    book_page_no = book_page_no if book_page_no else 'NULL'
-    book_hadis_no = request.POST['BookHadisNo']
-    book_hadis_no = book_hadis_no if book_hadis_no else 'NULL'
+    book_page_no = int(book_page_no) if book_page_no else None
+    book_narration_no = request.POST['BookHadisNo']
+    book_narration_no = int(book_narration_no) if book_narration_no else None
+    imam_id = int(request.POST['MasoumID'])
+    book_id = int(request.POST['BookID'])
 
-    book_id = request.POST['BookID']
+    imam = Imam.objects.get(id=imam_id)
+    book = Book.objects.get(id=book_id)
 
-    subjects = [request.POST[f'HadisSubject{i}'] for i in range(1, 16)]
+    narration = Narration(name=hadis_name, narrator=narrators, content=hadis_text,
+                          book_vol_no=book_vol_no, book_page_no=book_page_no,
+                          book_narration_no=book_narration_no)
+    narration.book = book
+    narration.imam = imam
+    narration.save()
 
-    ayat = [{'soore_name': request.POST[f'ContainingAyatSoore{i}'],
-             'aye_no': request.POST[f'ContainingAyatAye{i}']} for i in range(1, 36)]
-
-    related_explanation = [{'expression': request.POST[f'Expression{i}'],
-                            'explanation': request.POST[f'Explanation{i}']} for i in range(1, 71)]
-
-    ayat_summaries_in_fehrest = [{'alphabet': request.POST[f'FehrestSoore{i}'],
-                                  'subject': request.POST[f'FehrestAyeNo{i}'],
-                                  'summary': request.POST[f'FehrestAyeText{i}']} for i in range(1, 71)]
-
-    summaries_in_fehrest = [{'alphabet': request.POST[f'Alphabet{i}'],
-                             'subject': request.POST[f'Subject{i}'],
-                             'summary': request.POST[f'Text{i}']} for i in range(1, 71)]
-
-    had_id = get_had_id_for_insert_to_hadis_table()
-
-    cursor = conn.cursor()
-    cursor.execute(
-        "insert into dbo.Hadis(Had_ID, Had_Text, Had_Title, MasoumID, Had_Narrators, "
-        "Boo_ID, Had_BookVolNo, Had_BookPageNo, Had_BookHadisNo) "
-        f"values({had_id}, N'{hadis_text}', N'{hadis_name}', {masoum_id}, N'{hadis_narrators}', "
-        f"{book_id}, {book_vol_no}, {book_page_no}, {book_hadis_no})")
-
-    cursor.commit()
-    cursor.close()
-
-    cursor = conn.cursor()
+    subjects = [request.POST[f'HadisSubject{i}'] for i in range(1, 31)]
     for subject in subjects:
         if subject:
-            cursor.execute(f"INSERT INTO dbo.HadisSubject(Had_ID, HadS_Subject) VALUES({had_id}, N'{subject}')")
-    cursor.commit()
-    cursor.close()
+            narration_subject = NarrationSubject(subject=subject)
+            narration_subject.narration = narration
+            narration_subject.save()
 
-    cursor = conn.cursor()
+    related_explanation = [
+        {
+            'expression': request.POST[f'Expression{i}'],
+            'explanation': request.POST[f'Explanation{i}']
+        }
+        for i in range(1, 71)
+    ]
+    for expression_explanation in related_explanation:
+        expression = expression_explanation['expression']
+        explanation = expression_explanation['explanation']
+        if expression and explanation:
+            narration_footnote = NarrationFootnote(expression=expression, explanation=explanation)
+            narration_footnote.narration = narration
+            narration_footnote.save()
+
+    # ayat = [{'soore_name': request.POST[f'ContainingAyatSoore{i}'],
+    #          'aye_no': request.POST[f'ContainingAyatAye{i}']} for i in range(1, 36)]
+    #
+
+    # ayat_summaries_in_fehrest = [{'alphabet': request.POST[f'FehrestSoore{i}'],
+    #                               'subject': request.POST[f'FehrestAyeNo{i}'],
+    #                               'summary': request.POST[f'FehrestAyeText{i}']} for i in range(1, 71)]
+
+    summaries_in_fehrest = [
+        {'alphabet': request.POST[f'Alphabet{i}'],
+         'subject_1': request.POST[f'Subject{i}'],
+         'subject_2': request.POST[f'Text1{i}'],
+         'subject_3': request.POST[f'Text2{i}'],
+         'subject_4': request.POST[f'Text3{i}'],
+         'expression': request.POST[f'Text4{i}'],
+         'summary': request.POST[f'Text5{i}'],
+         'is_verse': request.POST.get(f'isVerse{i}'),
+         'surah_name': request.POST.get(f'surah_name{i}'),
+         'verse_no': request.POST.get(f'verse_no{i}'),
+         } for i in range(1, 71)
+    ]
+
     for item in summaries_in_fehrest:
-        if item['subject'] and item['alphabet']:
-            item['summary'] = item['summary'] if item['summary'] else 'NULL'
-            cursor.execute(
-                f"INSERT INTO dbo.HadisSummaryInFehrest(Had_ID, HadSIF_Alphabet, HadSIF_subject, HadSIF_Summary) "
-                f"VALUES({had_id}, N'{item['alphabet']}', N'{item['subject']}', N'{item['summary']}')")
-    cursor.commit()
-    cursor.close()
+        if item['subject_1'] and item['alphabet']:
+            if not item['summary']:
+                item['summaty'] = None
+            content_summary_tree = ContentSummaryTree(alphabet=item['alphabet'],
+                                                      subject_1=item['subject_1'],
+                                                      subject_2=item['subject_2'],
+                                                      subject_3=item['subject_3'],
+                                                      subject_4=item['subject_4'],
+                                                      expression=item['expression'],
+                                                      summary=item['summary'])
+            content_summary_tree.narration = narration
+            content_summary_tree.save()
 
-    cursor = conn.cursor()
-    for item in ayat:
-        if item['soore_name'] and item['aye_no']:
-            # item['soore_name'] = item['soore_name'] if item['soore_name'] else 'NULL'
-            cursor.execute(
-                f"INSERT INTO dbo.[AyatInHadis](Had_ID, [AyaIH_SooreName], [AyaIH_AyeNo]) "
-                f"VALUES({had_id}, N'{item['soore_name']}', {item['aye_no']})")
-    cursor.commit()
-    cursor.close()
+            is_verse = item['is_verse']
+            if is_verse:
+                surah_name = item['surah_name']
+                verse_no = item['verse_no']
+                quran_verse = QuranVerse.objects.get(surah_name=surah_name, verse_no=verse_no)
+                narration_verse = NarrationVerse()
+                narration_verse.narration = narration
+                narration_verse.quran_verse = quran_verse
+                narration_verse.save()
+
+    # cursor = conn.cursor()
+    # for item in ayat:
+    #     if item['soore_name'] and item['aye_no']:
+    #         # item['soore_name'] = item['soore_name'] if item['soore_name'] else 'NULL'
+    #         cursor.execute(
+    #             f"INSERT INTO dbo.[AyatInHadis](Had_ID, [AyaIH_SooreName], [AyaIH_AyeNo]) "
+    #             f"VALUES({had_id}, N'{item['soore_name']}', {item['aye_no']})")
+    # cursor.commit()
+    # cursor.close()
 
     return HttpResponseRedirect(reverse('ahadis:save_hadis_page'))
 
 
 def show(request, had_ids=None):
-    df_json = get_ahadis(had_ids, in_json_format=True)
-    fehrest_json = get_ahadis_fehrest(in_hierarchy_format=True)
-    ayat_fehrest_json = get_ayat_fehrest(in_hierarchy_format=True)
-    ayat_fehrest_serial_json = get_ayat_fehrest_serial(in_hierarchy_format=True)
-    return render(request, 'ahadis/show.html', {'ahadis': df_json, 'fehrest': fehrest_json,
-                                                'ayat_fehrest': ayat_fehrest_json,
+    # df_json = get_ahadis(had_ids, in_json_format=True)
+    # fehrest_json = get_ahadis_fehrest(in_hierarchy_format=True)
+    # ayat_fehrest_json = get_ayat_fehrest(in_hierarchy_format=True)
+    # ayat_fehrest_serial_json = get_ayat_fehrest_serial(in_hierarchy_format=True)
+    narrations = get_narrations()
+    content_summary_tree, content_summary_df = get_content_summary_tree()
+    verses_content_summary_tree, verses_content_summary_df = get_verses_content_summary_tree()
+    ayat_fehrest_json = []
+    ayat_fehrest_serial_json = []
+    # return render(request, 'ahadis/show.html', {'ahadis': df_json, 'fehrest': fehrest_json,
+    #                                             'ayat_fehrest': ayat_fehrest_json,
+    #                                             'ayat_fehrest_serial': ayat_fehrest_serial_json})
+    return render(request, 'ahadis/show.html', {'ahadis': narrations, 'fehrest': content_summary_tree,
+                                                'ayat_fehrest': verses_content_summary_tree,
                                                 'ayat_fehrest_serial': ayat_fehrest_serial_json})
 
 
@@ -170,11 +240,8 @@ def save_book(request):
     subject = request.POST['Subject']
     language = request.POST['Language']
 
-    cursor = conn.cursor()
-    cursor.execute("insert into dbo.Book(Boo_Title, Boo_Author, Boo_Publisher, Boo_Language, Boo_Subject) "
-                   f"values(N'{name}', N'{author}', N'{publisher}', N'{language}', N'{subject}')")
-    cursor.commit()
-    cursor.close()
+    new_book = Book(name=name, publisher=publisher, author=author, subject=subject, language=language)
+    new_book.save()
 
     return HttpResponseRedirect(reverse('ahadis:save_book_page'))
 
@@ -228,16 +295,32 @@ def filter_ahadis_from_fehrest(request):
 
 
 def filter_ahadis_from_fehrest_subject(request):
-    subject = request.POST['Subject']
-    subject = subject if subject else None
+    args = {}
+    alphabet = request.POST.get('alphabet')
+    if alphabet:
+        args['alphabet'] = alphabet
+    subject_1 = request.POST.get('subject_1')
+    if subject_1:
+        args['subject_1'] = subject_1
+    subject_2 = request.POST.get('subject_2')
+    if subject_2:
+        args['subject_2'] = subject_2
+    subject_3 = request.POST.get('subject_3')
+    if subject_3:
+        args['subject_3'] = subject_3
+    subject_4 = request.POST.get('subject_4')
+    if subject_4:
+        args['subject_4'] = subject_4
+    narration_id = request.POST.get('narration_id')
+    if narration_id:
+        args['narration_id'] = narration_id
 
-    fehrest = get_ahadis_fehrest()
-    had_ids = fehrest['Had_ID'][fehrest['HadSIF_subject'] == subject].unique()
+    filtered_content_summary_tree, filtered_content_summary_df = get_content_summary_tree(**args)
+    content_summary_tree, content_summary_df = get_content_summary_tree()
 
-    df_json = get_ahadis(had_ids, in_json_format=True)
-
-    fehrest_json = get_ahadis_fehrest(in_hierarchy_format=True)
-    return render(request, 'ahadis/show.html', {'ahadis': df_json, 'fehrest': fehrest_json})
+    narration_ids = filtered_content_summary_df['narration_id'].unique().tolist()
+    narrations = get_narrations(narration_ids)
+    return render(request, 'ahadis/show.html', {'ahadis': narrations, 'fehrest': content_summary_tree})
 
 
 def remove_arabic_characters(string):
@@ -272,12 +355,94 @@ def get_ahadis(had_ids=None, in_json_format=False):
     return result
 
 
-def get_masoumin():
-    query = 'select * from JanatolMava.dbo.Masoum'
-    result = pd.read_sql_query(query, conn)
-    result = result.to_json(orient="records")
+def get_narrations(narration_ids=None):
+    # n = Narration.objects.all()
+    # nr = Narration.objects.select_related('narrationsubject').all()
+    # ns = NarrationSerializer(n, many=True)
+    # narrations = Narration.objects.all().values('name', 'narrator', 'content', 'book_vol_no', 'book_page_no',
+    #                                             'book_narration_no', 'imam__name', 'narrationsubject__subject',
+    #                                             'book__name', 'book__publisher', 'narrationfootnote__expression')
+    narrations = Narration.objects.all().values('id', 'name', 'narrator', 'content', 'book_vol_no', 'book_page_no',
+                                                           'book_narration_no', 'imam__name', 'book__name',
+                                                           'book__publisher',
+                                                           )
+    # narrations_serialized = NarrationSerializer(narrations, many=True).data
+    narrations_df = pd.DataFrame(narrations)
+    if narration_ids:
+        narrations_df = narrations_df[narrations_df['id'].isin(narration_ids)]
+    result = narrations_df.to_json(orient="records")
     result = json.loads(result)
     return result
+
+
+def get_content_summary_tree_old():
+    content_summary_tree = ContentSummaryTree.objects.all().values()
+    result = pd.DataFrame(content_summary_tree)
+    result_json = {
+        alphabet:
+            {
+                subject1:
+                    [
+                        {'had_id': id, 'summary': summary} for id, summary in
+                        zip(result['id'][result['subject_2'] == subject1],
+                            result['summary'][result['subject_2'] == subject1])
+                    ]
+                for subject1 in result['subject_1'][result['alphabet'] == alphabet] if subject1
+            }
+        for alphabet in result['alphabet'].unique() if alphabet
+    }
+    result = result_json
+    return result
+
+
+def nest(df, prev):
+    print(prev)
+    if len(df.columns) == 1:
+        return list(df.iloc[:, 0])
+    first_col_name = df.columns[0]
+    output = {
+        key: nest(df[df[first_col_name] == key].drop(first_col_name, axis=1), prev)
+        for key in df[first_col_name].unique() if key
+    }
+    return output
+
+
+def get_content_summary_tree(**kwargs):
+    content_summary_tree = ContentSummaryTree.objects.filter(**kwargs).values()
+    result = pd.DataFrame(content_summary_tree)
+    result.replace('', None, inplace=True)
+    column_names = ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4']
+    for i in range(1, len(column_names)):
+        result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
+    result_df = result[
+        ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'narration_id', 'expression', 'summary']]
+    result_nested_json = nest(result_df, {})
+
+    return result_nested_json, result_df
+
+
+def get_verses_content_summary_tree(**kwargs):
+    content_summary_tree = ContentSummaryTree.objects.filter(**kwargs).values()
+    result = pd.DataFrame(content_summary_tree)
+    result.replace('', None, inplace=True)
+
+    narration_verse = NarrationVerse.objects.all().values()
+    narration_verse_df = pd.DataFrame(narration_verse)
+    narration_verse_df.replace('', None, inplace=True)
+
+    result = pd.merge(result, narration_verse_df, how='inner', on='narration_id')
+    column_names = ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4']
+    for i in range(1, len(column_names)):
+        result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
+    result_df = result[
+        ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'narration_id', 'expression', 'summary']]
+    result_nested_json = nest(result_df, {})
+
+    return result_nested_json, result_df
+
+
+def get_Imams():
+    return Imam.objects.all().values()
 
 
 def get_had_id_for_insert_to_hadis_table():
