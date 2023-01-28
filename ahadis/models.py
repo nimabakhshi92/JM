@@ -123,4 +123,4 @@ class ContentSummaryTree(models.Model):
         db_table = 'ContentSummaryTree'
 
     def __str__(self):
-        return self.subject_5
+        return self.expression
