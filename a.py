@@ -3,6 +3,7 @@ import mysql.connector
 
 # conn = mysql.connector.connect(host='localhost', database='JM', user='root', password='newpassword')
 df = pd.read_csv('./quran clean.csv')
+df = df.loc[0:6235,]
 #
 # df.to_sql(con=conn, name='QuranVerseC', if_exists='replace', schema='JM')
 
