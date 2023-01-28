@@ -32,7 +32,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'ahadis.apps.AhadisConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'ahadis.apps.AhadisConfig',
 ]
 
 MIDDLEWARE = [
@@ -85,6 +85,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'JM',
         'USER': 'root',
+        'PASSWORD': 'newpassword',
         'HOST': '127.0.0.1',
         'PORT': '3306',
     },
