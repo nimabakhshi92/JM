@@ -12,7 +12,12 @@ urlpatterns = [
     # path('save_imams', views.save_imam, name='save_imam'),
     path('search', views.search, name='search'),
     path('filter_ahadis_from_fehrest', views.filter_ahadis_from_fehrest, name='filter_ahadis_from_fehrest'),
-    path('filter_ahadis_from_fehrest_subject', views.filter_ahadis_from_fehrest_subject, name='filter_ahadis_from_fehrest_subject'),
+    path('filter_ahadis_from_fehrest_subject', views.filter_ahadis_from_fehrest_subject,
+         name='filter_ahadis_from_fehrest_subject'),
+    path('filter_ayat_from_fehrest_subject', views.filter_ayat_from_fehrest_subject,
+         name='filter_ayat_from_fehrest_subject'),
+    path('filter_ahadis_from_fehrest_subject_a', views.filter_ahadis_from_fehrest_subject_a,
+         name='filter_ahadis_from_fehrest_subject_a'),
     path('check_hadis_repetition', views.check_hadis_repetition, name='check_hadis_repetition'),
     # path('test', views.test, name='test'),
 ]

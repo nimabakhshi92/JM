@@ -1,18 +1,55 @@
 function showAyatSubject(){
-    var obj = document.getElementById("AyatSubject");
+    var obj = document.getElementById("FehrestAyat");
     obj.style.display="block";
-    var obj = document.getElementById("AyatSerial");
+    var obj = document.getElementById("Fehrest");
     obj.style.display="none";
-    document.getElementById("AyatSubjectButton").style.backgroundColor = 'green';
-    document.getElementById("AyatSerialButton").style.backgroundColor = '#EEE';
+    var obj = document.getElementById("FehrestAyatMozuee");
+    obj.style.display="none";
+    document.getElementById("AyatSubjectButton1").style.backgroundColor = 'green';
+    document.getElementById("RevayatSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectButton2").style.backgroundColor = 'green';
+    document.getElementById("RevayatSubjectButton2").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectSubjectButton2").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectButton3").style.backgroundColor = 'green';
+    document.getElementById("RevayatSubjectButton3").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectSubjectButton3").style.backgroundColor = 'white';
 }
-function showAyatSerial(){
-    var obj = document.getElementById("AyatSubject");
-    obj.style.display="none";
-    var obj = document.getElementById("AyatSerial");
+function showAyatSubjectSubject(){
+    var obj = document.getElementById("FehrestAyatMozuee");
     obj.style.display="block";
-    document.getElementById("AyatSubjectButton").style.backgroundColor = '#EEE';
-    document.getElementById("AyatSerialButton").style.backgroundColor = 'green';
+    var obj = document.getElementById("FehrestAyat");
+    obj.style.display="none";
+    var obj = document.getElementById("Fehrest");
+    obj.style.display="none";
+    document.getElementById("AyatSubjectSubjectButton1").style.backgroundColor = 'green';
+    document.getElementById("AyatSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("RevayatSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectSubjectButton2").style.backgroundColor = 'green';
+    document.getElementById("AyatSubjectButton2").style.backgroundColor = 'white';
+    document.getElementById("RevayatSubjectButton2").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectSubjectButton3").style.backgroundColor = 'green';
+    document.getElementById("AyatSubjectButton3").style.backgroundColor = 'white';
+    document.getElementById("RevayatSubjectButton3").style.backgroundColor = 'white';
+}
+
+
+function showRevayatSubject(){
+    var obj = document.getElementById("FehrestAyatMozuee");
+    obj.style.display="none";
+    var obj = document.getElementById("FehrestAyat");
+    obj.style.display="none";
+    var obj = document.getElementById("Fehrest");
+    obj.style.display="block";
+    document.getElementById("AyatSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("RevayatSubjectButton1").style.backgroundColor = 'green';
+    document.getElementById("AyatSubjectSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectButton2").style.backgroundColor = 'white';
+    document.getElementById("RevayatSubjectButton2").style.backgroundColor = 'green';
+    document.getElementById("AyatSubjectSubjectButton2").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectButton3").style.backgroundColor = 'white';
+    document.getElementById("RevayatSubjectButton3").style.backgroundColor = 'green';
+    document.getElementById("AyatSubjectSubjectButton3").style.backgroundColor = 'white';
 }
 function showMoreBoxes2(){
     var obj = document.getElementById("MoreSummariesBoxes2");
@@ -34,3 +71,4 @@ function closeRepeatBox(){
     var obj = document.getElementById("RepeatBoxDiv");
     obj.style.display="none";
 }
+showRevayatSubject()

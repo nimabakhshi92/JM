@@ -8,6 +8,7 @@ from .utils import conn
 from .models import *
 from .serializers import *
 
+
 # def save_imam(request):
 #     imams_names = [
 #         'حضرت پیامبر صلی الله علیه و آله',
@@ -214,18 +215,15 @@ def show(request, had_ids=None):
     # df_json = get_ahadis(had_ids, in_json_format=True)
     # fehrest_json = get_ahadis_fehrest(in_hierarchy_format=True)
     # ayat_fehrest_json = get_ayat_fehrest(in_hierarchy_format=True)
-    # ayat_fehrest_serial_json = get_ayat_fehrest_serial(in_hierarchy_format=True)
+    ayat_fehrest_serial_json, ayat_fehrest_serial_df = get_ayat_fehrest_serial()
     narrations = get_narrations()
     content_summary_tree, content_summary_df = get_content_summary_tree()
     verses_content_summary_tree, verses_content_summary_df = get_verses_content_summary_tree()
-    ayat_fehrest_json = []
-    ayat_fehrest_serial_json = []
-    # return render(request, 'ahadis/show.html', {'ahadis': df_json, 'fehrest': fehrest_json,
-    #                                             'ayat_fehrest': ayat_fehrest_json,
-    #                                             'ayat_fehrest_serial': ayat_fehrest_serial_json})
-    return render(request, 'ahadis/show.html', {'ahadis': narrations, 'fehrest': content_summary_tree,
-                                                'ayat_fehrest': verses_content_summary_tree,
-                                                'ayat_fehrest_serial': ayat_fehrest_serial_json})
+    return render(request, 'ahadis/show.html', {
+        'ahadis': narrations, 'fehrest': content_summary_tree,
+        'ayat_fehrest': verses_content_summary_tree,
+        'ayat_fehrest_serial': ayat_fehrest_serial_json
+    })
 
 
 def save_book_page(request):
@@ -316,10 +314,124 @@ def filter_ahadis_from_fehrest_subject(request):
 
     filtered_content_summary_tree, filtered_content_summary_df = get_content_summary_tree(**args)
     content_summary_tree, content_summary_df = get_content_summary_tree()
+    ayat_fehrest_serial, ayat_fehrest_serial_df = get_ayat_fehrest_serial()
+    verses_content_summary_tree, verses_content_summary_df = get_verses_content_summary_tree()
 
     narration_ids = filtered_content_summary_df['narration_id'].unique().tolist()
-    narrations = get_narrations(narration_ids)
-    return render(request, 'ahadis/show.html', {'ahadis': narrations, 'fehrest': content_summary_tree})
+
+    show_all = request.POST.get('show-all')
+    if not show_all:
+        narrations = get_narrations(narration_ids)
+    else:
+        narrations = get_narrations()
+
+    return render(request, 'ahadis/show.html', {'ahadis': narrations, 'fehrest': content_summary_tree,
+                                                'ayat_fehrest': verses_content_summary_tree,
+                                                'ayat_fehrest_serial': ayat_fehrest_serial,
+                                                })
+
+
+def filter_ahadis_from_fehrest_subject_a(request):
+    args = {}
+    alphabet = request.POST.get('a_alphabet')
+    if alphabet:
+        args['alphabet'] = alphabet
+    subject_1 = request.POST.get('a_subject_1')
+    if subject_1:
+        args['subject_1'] = subject_1
+    subject_2 = request.POST.get('a_subject_2')
+    if subject_2:
+        args['subject_2'] = subject_2
+    subject_3 = request.POST.get('a_subject_3')
+    if subject_3:
+        args['subject_3'] = subject_3
+    subject_4 = request.POST.get('a_subject_4')
+    if subject_4:
+        args['subject_4'] = subject_4
+    narration_id = request.POST.get('a_narration_id')
+    if narration_id:
+        args['narration_id'] = narration_id
+
+    filtered_content_summary_tree, filtered_content_summary_df = get_content_summary_tree(**args)
+    content_summary_tree, content_summary_df = get_content_summary_tree()
+    ayat_fehrest_serial, ayat_fehrest_serial_df = get_ayat_fehrest_serial()
+    verses_content_summary_tree, verses_content_summary_df = get_verses_content_summary_tree()
+
+    narration_ids = filtered_content_summary_df['narration_id'].unique().tolist()
+
+    show_all = request.POST.get('show-all')
+    if not show_all:
+        narrations = get_narrations(narration_ids)
+    else:
+        narrations = get_narrations()
+
+    return render(request, 'ahadis/show.html', {'ahadis': narrations, 'fehrest': content_summary_tree,
+                                                'ayat_fehrest': verses_content_summary_tree,
+                                                'ayat_fehrest_serial': ayat_fehrest_serial,
+                                                })
+
+
+def filter_ayat_from_fehrest_subject(request):
+    args = {}
+    surah_name = request.POST.get('surah_name')
+    if surah_name:
+        args['surah_name'] = surah_name
+    verse_no = request.POST.get('verse_no')
+    if verse_no:
+        args['verse_no'] = verse_no
+
+    filtered_ayat_fehrest_serial, filtered_ayat_fehrest_serial_df = get_ayat_fehrest_serial(**args)
+    ayat_fehrest_serial, ayat_fehrest_serial_df = get_ayat_fehrest_serial()
+    content_summary_tree, content_summary_df = get_content_summary_tree()
+    verses_content_summary_tree, verses_content_summary_df = get_verses_content_summary_tree()
+
+    narration_ids = filtered_ayat_fehrest_serial_df['narration__id'].unique().tolist()
+
+    show_all = request.POST.get('show-all')
+    if not show_all:
+        narrations = get_narrations(narration_ids)
+    else:
+        narrations = get_narrations()
+
+    return render(request, 'ahadis/show.html', {
+        'ahadis': narrations, 'fehrest': content_summary_tree,
+        'ayat_fehrest': verses_content_summary_tree,
+        'ayat_fehrest_serial': ayat_fehrest_serial
+    }
+                  )
+
+
+def get_ayat_fehrest_serial(**kwargs):
+    narration_verses = NarrationVerse.objects.all().values(
+        'narration__id', 'quran_verse__verse_no',
+        'quran_verse__surah_no', 'quran_verse__surah_name',
+        'quran_verse__verse_content'
+    )
+    result_df = pd.DataFrame(narration_verses)
+    if kwargs:
+        for key, value in kwargs.items():
+            try:
+                value = int(value)
+            except:
+                pass
+            result_df = result_df[result_df[f'quran_verse__{key}'] == value]
+
+    result_df.sort_values(['quran_verse__surah_no', 'quran_verse__verse_no'], ascending=True, inplace=True)
+
+    result = None
+    if len(result_df) > 0:
+        result_json = {
+            sooreh_name: [
+                {'aye_no': aye_no, 'aye_content': aye_content} for aye_no, aye_content in
+                zip(
+                    result_df['quran_verse__verse_no'][result_df['quran_verse__surah_name'] == sooreh_name].unique(),
+                    result_df['quran_verse__verse_content'][
+                        result_df['quran_verse__surah_name'] == sooreh_name].unique(),
+                )]
+            for sooreh_name in result_df['quran_verse__surah_name'].unique()
+        }
+        result = result_json
+    return result, result_df
 
 
 def remove_arabic_characters(string):
@@ -362,9 +474,9 @@ def get_narrations(narration_ids=None):
     #                                             'book_narration_no', 'imam__name', 'narrationsubject__subject',
     #                                             'book__name', 'book__publisher', 'narrationfootnote__expression')
     narrations = Narration.objects.all().values('id', 'name', 'narrator', 'content', 'book_vol_no', 'book_page_no',
-                                                           'book_narration_no', 'imam__name', 'book__name',
-                                                           'book__publisher',
-                                                           )
+                                                'book_narration_no', 'imam__name', 'book__name',
+                                                'book__publisher',
+                                                )
     # narrations_serialized = NarrationSerializer(narrations, many=True).data
     narrations_df = pd.DataFrame(narrations)
     if narration_ids:
@@ -434,7 +546,7 @@ def get_verses_content_summary_tree(**kwargs):
     for i in range(1, len(column_names)):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
     result_df = result[
-        ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'narration_id', 'expression', 'summary']]
+        ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'narration_id', 'expression', 'summary']].drop_duplicates()
     result_nested_json = nest(result_df, {})
 
     return result_nested_json, result_df
@@ -510,7 +622,7 @@ def get_ayat_fehrest(in_hierarchy_format=False):
     return result
 
 
-def get_ayat_fehrest_serial(in_hierarchy_format=False):
+def get_ayat_fehrest_serial_old(in_hierarchy_format=False):
     query = 'select * from JanatolMava.dbo.[AyatInHadis]'
     result = pd.read_sql_query(query, conn)
     if in_hierarchy_format and len(result) > 0:
