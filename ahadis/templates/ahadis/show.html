@@ -17,11 +17,13 @@
         <div class="fehrest-cat">
             <p class="fehrest-title"> فهرست مطالب</p>
             <button id="RevayatSubjectButton2" class="AyatFehrestButtons" onclick="showRevayatSubject()">روایات</button>
-            <button id="AyatSubjectSubjectButton2" class="AyatFehrestButtons" onclick="showAyatSubjectSubject()">آیات </button>
-            <button id="AyatSubjectButton2" class="AyatFehrestButtons" onclick="showAyatSubject()">سوره ها</button>
+            <button id="AyatSubjectSubjectButton2" class="AyatFehrestButtons" onclick="showAyatSubject()">آیات
+            </button>
+            <button id="AyatSubjectButton2" class="AyatFehrestButtons" onclick="showVerses()">سوره ها</button>
         </div>
         <ul class="tree" id="ul">
             <form action="{% url 'ahadis:filter_ahadis_from_fehrest_subject' %}" method="post">
+                {% csrf_token %}
                 <Button class="fehrest-btn" id="show-all" name="show-all" value="on" onclick="">
                     نمایش همه فهرست
                 </Button>
@@ -36,14 +38,12 @@
                     <ul>
                         {% for subject_1, subject_1_value in alphabet_value.items %}
                         <li class="section">
-                            {% csrf_token %}
                             <input name="subject_1" value="{{subject_1}}" type="checkbox" id="subject_1{{subject_1}}"/>
                             <label for="subject_1{{subject_1}}">
                                 <Button class="fehrest-btn" name="subject_1" value="{{subject_1}}" onclick="">
                                     {{subject_1}}
                                 </Button>
                             </label>
-
                             <ul id="df">
                                 {% for subject_2, subject_2_value in subject_1_value.items %}
                                 <li class="section">
@@ -54,83 +54,34 @@
                                             {{subject_2}}
                                         </Button>
                                     </label>
-
                                     <ul>
-                                        {% for subject_3, subject_3_value in subject_2_value.items %}
-                                        <li class="section">
-                                            {% csrf_token %}
-                                            <input name="subject_3" value="{{subject_3}}" type="checkbox"
-                                                   id="subject_3{{subject_3}}"/>
-                                            <label for="subject_3{{subject_3}}">
-                                                <Button class="fehrest-btn" name="subject_3" value="{{subject_3}}"
-                                                        onclick="">{{subject_3}}
-                                                </Button>
-                                            </label>
-
-                                            <ul>
-                                                {% for subject_4, subject_4_value in subject_3_value.items %}
-                                                <li class="section">
-                                                    <input name="subject_4" value="{{subject_4}}"
-                                                           type="checkbox" id="subject_4{{subject_4}}"/>
-                                                    <label for="subject_4{{subject_4}}">
-                                                        <Button class="fehrest-btn" name="subject_4"
-                                                                value="{{subject_4}}"
-                                                                onclick="">
-                                                            {{subject_4}}
+                                        {% for narration_id, narration_id_value in subject_2_value.items %}
+                                        <li class="section fehrest-narration-container">
+                                            {% for e, s_l in narration_id_value.items %}
+                                            <div class="summary-container">
+                                                <input name="expression"
+                                                       value="{{e}}"
+                                                       type="checkbox"
+                                                       id="expression{{e}}"/>
+                                                <label for="expression{{e}}">
+                                                    <Button class="fehrest-btn" name="expression" value="{{e}}">
+                                                        {{e}}
+                                                    </Button>
+                                                </label>
+                                                <ul>
+                                                    {% for summary in s_l %}
+                                                    <li>
+                                                        <Button class="fehrest-btn" name="summary"
+                                                                value="{{summary}}">
+                                                            {{summary}}
                                                         </Button>
-                                                    </label>
-
-                                                    <ul>
-                                                        {% for narration_id, narration_id_value in subject_4_value.items %}
-                                                        <li class="section">
-                                                            <input name="narration_id"
-                                                                   value="{{narration_id}}"
-                                                                   type="checkbox"
-                                                                   id="narration_id{{narration_id}}"/>
-                                                            <label for="narration_id{{narration_id}}">
-                                                                <Button class="fehrest-btn" name="narration_id"
-                                                                        value="{{narration_id}}"
-                                                                        onclick="">{{narration_id}}
-                                                                </Button>
-                                                            </label>
-
-                                                            <ul>
-                                                                {% for e, s_l in narration_id_value.items %}
-                                                                <li class="section">
-                                                                    <input name="expression"
-                                                                           value="{{e}}"
-                                                                           type="checkbox"
-                                                                           id="expression{{e}}"/>
-                                                                    <label for="expression{{e}}">{{e}}</label>
-                                                                    <Button class="fehrest-btn" name="expression"
-                                                                            value="{{e}}"
-                                                                            onclick="">نمایش تمام
-                                                                        احادیث این
-                                                                        موضوع
-                                                                    </Button>
-                                                                    <ul>
-                                                                        {% for summary in s_l %}
-                                                                        <li>
-
-                                                                            <Button class="fehrest-btn" name="summary"
-                                                                                    value="{{value3.had_id}}"
-                                                                                    onclick="">
-                                                                                {{summary}}
-                                                                            </Button>
-                                                                        </li>
-                                                                        {% endfor %}
-                                                                    </ul>
-                                                                </li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </li>
-                                                {% endfor %}
-                                            </ul>
-                                        </li>
-                                        {% endfor %}
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            {% endfor %}
+                                        <li>
+                                            {% endfor %}
                                     </ul>
                                 </li>
                                 {% endfor %}
@@ -147,13 +98,14 @@
         <div class="fehrest-cat">
             <p class="fehrest-title"> فهرست مطالب</p>
             <button id="RevayatSubjectButton1" class="AyatFehrestButtons" onclick="showRevayatSubject()">روایات</button>
-            <button id="AyatSubjectSubjectButton1" class="AyatFehrestButtons" onclick="showAyatSubjectSubject()">آیات </button>
-            <button id="AyatSubjectButton1" class="AyatFehrestButtons" onclick="showAyatSubject()">سوره ها</button>
+            <button id="AyatSubjectSubjectButton1" class="AyatFehrestButtons" onclick="showAyatSubject()">آیات
+            </button>
+            <button id="AyatSubjectButton1" class="AyatFehrestButtons" onclick="showVerses()">سوره ها</button>
         </div>
         <ul class="tree" id="ul">
             <form action="{% url 'ahadis:filter_ayat_from_fehrest_subject' %}" method="post">
                 {% csrf_token %}
-               <Button class="fehrest-btn" id="show-all" name="show-all" value="on" onclick="">
+                <Button class="fehrest-btn" id="show-all" name="show-all" value="on" onclick="">
                     نمایش همه فهرست
                 </Button>
                 {% for surah_name, verse_list in ayat_fehrest_serial.items %}
@@ -168,9 +120,9 @@
                         {% for verse in verse_list %}
                         <li class="section">
                             {% csrf_token %}
-                                <Button class="fehrest-btn" name="verse_no" value="{{verse.aye_no}}" onclick="">
-                                    <span>{{verse.aye_no}}</span> - <span>{{verse.aye_content}}</span>
-                                </Button>
+                            <Button class="fehrest-btn" name="verse_no" value="{{verse.aye_no}}" onclick="">
+                                <span>{{verse.aye_no}}</span> - <span>{{verse.aye_content}}</span>
+                            </Button>
                         </li>
                         {% endfor %}
                     </ul>
@@ -183,19 +135,20 @@
         <div class="fehrest-cat">
             <p class="fehrest-title"> فهرست مطالب</p>
             <button id="RevayatSubjectButton3" class="AyatFehrestButtons" onclick="showRevayatSubject()">روایات</button>
-            <button id="AyatSubjectSubjectButton3" class="AyatFehrestButtons" onclick="showAyatSubjectSubject()">آیات </button>
-            <button id="AyatSubjectButton3" class="AyatFehrestButtons" onclick="showAyatSubject()">سوره ها</button>
+            <button id="AyatSubjectSubjectButton3" class="AyatFehrestButtons" onclick="showAyatSubject()">آیات
+            </button>
+            <button id="AyatSubjectButton3" class="AyatFehrestButtons" onclick="showVerses()">سوره ها</button>
         </div>
-       <ul class="a_tree" id="ul">
+        <ul class="a_tree" id="ul">
             <form action="{% url 'ahadis:filter_ahadis_from_fehrest_subject_a' %}" method="post">
-                   {% csrf_token %}
-             <Button class="fehrest-btn" id="show-all" name="a_show-all" value="on" onclick="">
+                {% csrf_token %}
+                <Button class="fehrest-btn" id="show-all" name="a_show-all" value="on" onclick="">
                     نمایش همه فهرست
                 </Button>
                 {% for alphabet, alphabet_value in ayat_fehrest.items %}
                 <li class="a_section">
-                    <input name="a_alphabet" type="checkbox" id="alphabet{{alphabet}}" value="{{alphabet}}"/>
-                    <label for="alphabet{{alphabet}}">
+                    <input name="a_alphabet" type="checkbox" id="a_alphabet{{alphabet}}" value="{{alphabet}}"/>
+                    <label for="a_alphabet{{alphabet}}">
                         <Button class="fehrest-btn" name="a_alphabet" value="{{alphabet}}" onclick="">
                             {{alphabet}}
                         </Button>
@@ -204,100 +157,51 @@
                         {% for subject_1, subject_1_value in alphabet_value.items %}
                         <li class="a_section">
                             {% csrf_token %}
-                            <input name="a_subject_1" value="{{subject_1}}" type="checkbox" id="subject_1{{subject_1}}"/>
-                            <label for="subject_1{{subject_1}}">
+                            <input name="a_subject_1" value="{{subject_1}}" type="checkbox"
+                                   id="a_subject_1{{subject_1}}"/>
+                            <label for="a_subject_1{{subject_1}}">
                                 <Button class="fehrest-btn" name="a_subject_1" value="{{subject_1}}" onclick="">
                                     {{subject_1}}
                                 </Button>
                             </label>
-
                             <ul id="df">
                                 {% for subject_2, subject_2_value in subject_1_value.items %}
                                 <li class="a_section">
                                     <input name="a_subject_2" value="{{subject_2}}" type="checkbox"
-                                           id="subject_2{{subject_2}}"/>
-                                    <label for="subject_2{{subject_2}}">
+                                           id="a_subject_2{{subject_2}}"/>
+                                    <label for="a_subject_2{{subject_2}}">
                                         <Button class="fehrest-btn" name="a_subject_2" value="{{subject_2}}" onclick="">
                                             {{subject_2}}
                                         </Button>
                                     </label>
-
                                     <ul>
-                                        {% for subject_3, subject_3_value in subject_2_value.items %}
-                                        <li class="a_section">
-                                            {% csrf_token %}
-                                            <input name="a_subject_3" value="{{subject_3}}" type="checkbox"
-                                                   id="subject_3{{subject_3}}"/>
-                                            <label for="subject_3{{subject_3}}">
-                                                <Button class="fehrest-btn" name="a_subject_3" value="{{subject_3}}"
-                                                        onclick="">{{subject_3}}
-                                                </Button>
-                                            </label>
-
-                                            <ul>
-                                                {% for subject_4, subject_4_value in subject_3_value.items %}
-                                                <li class="a_section">
-                                                    <input name="a_subject_4" value="{{subject_4}}"
-                                                           type="checkbox" id="subject_4{{subject_4}}"/>
-                                                    <label for="subject_4{{subject_4}}">
-                                                        <Button class="fehrest-btn" name="a_subject_4"
-                                                                value="{{subject_4}}"
-                                                                onclick="">
-                                                            {{subject_4}}
+                                        {% for narration_id, narration_id_value in subject_2_value.items %}
+                                        <li class="a_section fehrest-narration-container">
+                                            {% for e, s_l in narration_id_value.items %}
+                                            <div class="summary-container">
+                                                <input name="a_expression"
+                                                       value="{{e}}"
+                                                       type="checkbox"
+                                                       id="a_expression{{e}}"/>
+                                                <label for="a_expression{{e}}">
+                                                    <Button class="fehrest-btn" name="a_expression" value="{{e}}">
+                                                        {{e}}
+                                                    </Button>
+                                                </label>
+                                                <ul>
+                                                    {% for summary in s_l %}
+                                                    <li>
+                                                        <Button class="fehrest-btn" name="a_summary"
+                                                                value="{{summary}}">
+                                                            {{summary}}
                                                         </Button>
-                                                    </label>
-
-                                                    <ul>
-                                                        {% for narration_id, narration_id_value in subject_4_value.items %}
-                                                        <li class="a_section">
-                                                            <input name="a_narration_id"
-                                                                   value="{{narration_id}}"
-                                                                   type="checkbox"
-                                                                   id="narration_id{{narration_id}}"/>
-                                                            <label for="narration_id{{narration_id}}">
-                                                                <Button class="fehrest-btn" name="a_narration_id"
-                                                                        value="{{narration_id}}"
-                                                                        onclick="">{{narration_id}}
-                                                                </Button>
-                                                            </label>
-
-                                                            <ul>
-                                                                {% for e, s_l in narration_id_value.items %}
-                                                                <li class="a_section">
-                                                                    <input name="a_expression"
-                                                                           value="{{e}}"
-                                                                           type="checkbox"
-                                                                           id="expression{{e}}"/>
-                                                                    <label for="expression{{e}}">{{e}}</label>
-                                                                    <Button class="fehrest-btn" name="a_expression"
-                                                                            value="{{e}}"
-                                                                            onclick="">نمایش تمام
-                                                                        احادیث این
-                                                                        موضوع
-                                                                    </Button>
-                                                                    <ul>
-                                                                        {% for summary in s_l %}
-                                                                        <li>
-
-                                                                            <Button class="fehrest-btn" name="a_summary"
-                                                                                    value="{{value3.had_id}}"
-                                                                                    onclick="">
-                                                                                {{summary}}
-                                                                            </Button>
-                                                                        </li>
-                                                                        {% endfor %}
-                                                                    </ul>
-                                                                </li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </li>
-                                                {% endfor %}
-                                            </ul>
-                                        </li>
-                                        {% endfor %}
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            {% endfor %}
+                                        <li>
+                                            {% endfor %}
                                     </ul>
                                 </li>
                                 {% endfor %}

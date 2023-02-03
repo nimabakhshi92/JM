@@ -102,7 +102,7 @@ margin: 0;
 }
 
 li:hover{
-    background-color: rgba(90, 255, 90, 0.3);
+    background-color: rgba(90, 255, 90, 0.1);
     cursor: pointer
 }
 label{
@@ -164,4 +164,11 @@ label{
     margin-bottom: 5px;
     font-size: 1.5rem;
     font-weight: bold;
+}
+.fehrest-narration-container{
+    border: 1px solid #d2d2d2;
+    padding: 2px;
+}
+.summary-container label:hover, .summary-container li:hover{
+    background-color: #aaffaa;
 }

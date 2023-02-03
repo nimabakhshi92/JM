@@ -1,4 +1,4 @@
-function showAyatSubject(){
+function showVerses(){
     var obj = document.getElementById("FehrestAyat");
     obj.style.display="block";
     var obj = document.getElementById("Fehrest");
@@ -6,16 +6,18 @@ function showAyatSubject(){
     var obj = document.getElementById("FehrestAyatMozuee");
     obj.style.display="none";
     document.getElementById("AyatSubjectButton1").style.backgroundColor = 'green';
-    document.getElementById("RevayatSubjectButton1").style.backgroundColor = 'white';
-    document.getElementById("AyatSubjectSubjectButton1").style.backgroundColor = 'white';
     document.getElementById("AyatSubjectButton2").style.backgroundColor = 'green';
-    document.getElementById("RevayatSubjectButton2").style.backgroundColor = 'white';
-    document.getElementById("AyatSubjectSubjectButton2").style.backgroundColor = 'white';
     document.getElementById("AyatSubjectButton3").style.backgroundColor = 'green';
+
+    document.getElementById("RevayatSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("RevayatSubjectButton2").style.backgroundColor = 'white';
     document.getElementById("RevayatSubjectButton3").style.backgroundColor = 'white';
+
+    document.getElementById("AyatSubjectSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectSubjectButton2").style.backgroundColor = 'white';
     document.getElementById("AyatSubjectSubjectButton3").style.backgroundColor = 'white';
 }
-function showAyatSubjectSubject(){
+function showAyatSubject(){
     var obj = document.getElementById("FehrestAyatMozuee");
     obj.style.display="block";
     var obj = document.getElementById("FehrestAyat");
@@ -23,16 +25,17 @@ function showAyatSubjectSubject(){
     var obj = document.getElementById("Fehrest");
     obj.style.display="none";
     document.getElementById("AyatSubjectSubjectButton1").style.backgroundColor = 'green';
-    document.getElementById("AyatSubjectButton1").style.backgroundColor = 'white';
-    document.getElementById("RevayatSubjectButton1").style.backgroundColor = 'white';
     document.getElementById("AyatSubjectSubjectButton2").style.backgroundColor = 'green';
-    document.getElementById("AyatSubjectButton2").style.backgroundColor = 'white';
-    document.getElementById("RevayatSubjectButton2").style.backgroundColor = 'white';
     document.getElementById("AyatSubjectSubjectButton3").style.backgroundColor = 'green';
+
+    document.getElementById("AyatSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectButton2").style.backgroundColor = 'white';
     document.getElementById("AyatSubjectButton3").style.backgroundColor = 'white';
+
+    document.getElementById("RevayatSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("RevayatSubjectButton2").style.backgroundColor = 'white';
     document.getElementById("RevayatSubjectButton3").style.backgroundColor = 'white';
 }
-
 
 function showRevayatSubject(){
     var obj = document.getElementById("FehrestAyatMozuee");
@@ -41,14 +44,16 @@ function showRevayatSubject(){
     obj.style.display="none";
     var obj = document.getElementById("Fehrest");
     obj.style.display="block";
-    document.getElementById("AyatSubjectButton1").style.backgroundColor = 'white';
     document.getElementById("RevayatSubjectButton1").style.backgroundColor = 'green';
-    document.getElementById("AyatSubjectSubjectButton1").style.backgroundColor = 'white';
-    document.getElementById("AyatSubjectButton2").style.backgroundColor = 'white';
     document.getElementById("RevayatSubjectButton2").style.backgroundColor = 'green';
-    document.getElementById("AyatSubjectSubjectButton2").style.backgroundColor = 'white';
-    document.getElementById("AyatSubjectButton3").style.backgroundColor = 'white';
     document.getElementById("RevayatSubjectButton3").style.backgroundColor = 'green';
+
+    document.getElementById("AyatSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectButton2").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectButton3").style.backgroundColor = 'white';
+
+    document.getElementById("AyatSubjectSubjectButton1").style.backgroundColor = 'white';
+    document.getElementById("AyatSubjectSubjectButton2").style.backgroundColor = 'white';
     document.getElementById("AyatSubjectSubjectButton3").style.backgroundColor = 'white';
 }
 function showMoreBoxes2(){

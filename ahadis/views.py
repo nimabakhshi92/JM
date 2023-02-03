@@ -36,12 +36,10 @@ def save_narration_page(request):
     books = get_books()
     imams = get_Imams()
     quran_verse = list(QuranVerse.objects.all().order_by('surah_no', 'verse_no').values())
-    print(quran_verse)
     surah_names = []
     for verse in quran_verse:
         if verse['surah_name'] not in surah_names:
             surah_names.append((verse['surah_name']))
-    # print(surah_names)
     return render(request, 'ahadis/save_hadis.html',
                   {'books': books, 'masoumin': imams,
                    'summaries_counter': range(1, 71), 'subjects_counter': range(1, 31),
@@ -164,8 +162,6 @@ def save_narration(request):
         {'alphabet': request.POST[f'Alphabet{i}'],
          'subject_1': request.POST[f'Subject{i}'],
          'subject_2': request.POST[f'Text1{i}'],
-         'subject_3': request.POST[f'Text2{i}'],
-         'subject_4': request.POST[f'Text3{i}'],
          'expression': request.POST[f'Text4{i}'],
          'summary': request.POST[f'Text5{i}'],
          'is_verse': request.POST.get(f'isVerse{i}'),
@@ -181,8 +177,6 @@ def save_narration(request):
             content_summary_tree = ContentSummaryTree(alphabet=item['alphabet'],
                                                       subject_1=item['subject_1'],
                                                       subject_2=item['subject_2'],
-                                                      subject_3=item['subject_3'],
-                                                      subject_4=item['subject_4'],
                                                       expression=item['expression'],
                                                       summary=item['summary'])
             content_summary_tree.narration = narration
@@ -236,8 +230,10 @@ def save_book(request):
     author = request.POST['Author']
     subject = request.POST['Subject']
     language = request.POST['Language']
+    source_type = request.POST['source_type']
 
-    new_book = Book(name=name, publisher=publisher, author=author, subject=subject, language=language)
+    new_book = Book(name=name, publisher=publisher, author=author, subject=subject, language=language,
+                    source_type=source_type)
     new_book.save()
 
     return HttpResponseRedirect(reverse('ahadis:save_book_page'))
@@ -507,7 +503,6 @@ def get_content_summary_tree_old():
 
 
 def nest(df, prev):
-    print(prev)
     if len(df.columns) == 1:
         return list(df.iloc[:, 0])
     first_col_name = df.columns[0]
@@ -522,11 +517,10 @@ def get_content_summary_tree(**kwargs):
     content_summary_tree = ContentSummaryTree.objects.filter(**kwargs).values()
     result = pd.DataFrame(content_summary_tree)
     result.replace('', None, inplace=True)
-    column_names = ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4']
+    column_names = ['alphabet', 'subject_1', 'subject_2']
     for i in range(1, len(column_names)):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
-    result_df = result[
-        ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'narration_id', 'expression', 'summary']]
+    result_df = result[['alphabet', 'subject_1', 'subject_2', 'narration_id', 'expression', 'summary']]
     result_nested_json = nest(result_df, {})
 
     return result_nested_json, result_df
@@ -542,11 +536,11 @@ def get_verses_content_summary_tree(**kwargs):
     narration_verse_df.replace('', None, inplace=True)
 
     result = pd.merge(result, narration_verse_df, how='inner', on='narration_id')
-    column_names = ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4']
+    column_names = ['alphabet', 'subject_1', 'subject_2']
     for i in range(1, len(column_names)):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
     result_df = result[
-        ['alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'narration_id', 'expression', 'summary']].drop_duplicates()
+        ['alphabet', 'subject_1', 'subject_2', 'narration_id', 'expression', 'summary']].drop_duplicates()
     result_nested_json = nest(result_df, {})
 
     return result_nested_json, result_df
