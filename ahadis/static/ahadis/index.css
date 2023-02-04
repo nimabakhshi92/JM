@@ -11,8 +11,8 @@
   src: url(Mitra.ttf);
 }
 body{
-    font-family: Badr;
-    font-size: 16px;
+    font-family: Mitra;
+    font-size: 14px;
     width: 98%;
     margin: auto;
 }
@@ -23,7 +23,7 @@ input, select, button{
     background-color: white;
 }
 p{
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 700;
 }
 .FloatLeft{
@@ -41,7 +41,7 @@ input[type=button], Button{
 }
 #HeaderContent{
     color: white;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: bold;
 }
 .InputOne {
@@ -145,7 +145,7 @@ input:hover{
  }
 #ButtonsBelow button, #ButtonsBelow input{
     width: 30%;
-    font-size: 16px;
+    font-size: 20px;
     border: 1px solid #080;
     background-color: white;
  }

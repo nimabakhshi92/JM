@@ -38,8 +38,8 @@
                     <ul>
                         {% for subject_1, subject_1_value in alphabet_value.items %}
                         <li class="section">
-                            <input name="subject_1" value="{{subject_1}}" type="checkbox" id="subject_1{{subject_1}}"/>
-                            <label for="subject_1{{subject_1}}">
+                            <input name="subject_1" value="{{subject_1}}" type="checkbox" id="subject_1{{alphabet}}{{subject_1}}"/>
+                            <label for="subject_1{{alphabet}}{{subject_1}}">
                                 <Button class="fehrest-btn" name="subject_1" value="{{subject_1}}" onclick="">
                                     {{subject_1}}
                                 </Button>
@@ -48,8 +48,8 @@
                                 {% for subject_2, subject_2_value in subject_1_value.items %}
                                 <li class="section">
                                     <input name="subject_2" value="{{subject_2}}" type="checkbox"
-                                           id="subject_2{{subject_2}}"/>
-                                    <label for="subject_2{{subject_2}}">
+                                           id="subject_2{{alphabet}}{{subject_1}}{{subject_2}}"/>
+                                    <label for="subject_2{{alphabet}}{{subject_1}}{{subject_2}}">
                                         <Button class="fehrest-btn" name="subject_2" value="{{subject_2}}" onclick="">
                                             {{subject_2}}
                                         </Button>
@@ -62,8 +62,8 @@
                                                 <input name="expression"
                                                        value="{{e}}"
                                                        type="checkbox"
-                                                       id="expression{{e}}"/>
-                                                <label for="expression{{e}}">
+                                                       id="expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}"/>
+                                                <label for="expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}">
                                                     <Button class="fehrest-btn" name="expression" value="{{e}}">
                                                         {{e}}
                                                     </Button>
@@ -158,8 +158,8 @@
                         <li class="a_section">
                             {% csrf_token %}
                             <input name="a_subject_1" value="{{subject_1}}" type="checkbox"
-                                   id="a_subject_1{{subject_1}}"/>
-                            <label for="a_subject_1{{subject_1}}">
+                                   id="a_subject_1{{alphabet}}{{subject_1}}"/>
+                            <label for="a_subject_1{{alphabet}}{{subject_1}}">
                                 <Button class="fehrest-btn" name="a_subject_1" value="{{subject_1}}" onclick="">
                                     {{subject_1}}
                                 </Button>
@@ -168,8 +168,8 @@
                                 {% for subject_2, subject_2_value in subject_1_value.items %}
                                 <li class="a_section">
                                     <input name="a_subject_2" value="{{subject_2}}" type="checkbox"
-                                           id="a_subject_2{{subject_2}}"/>
-                                    <label for="a_subject_2{{subject_2}}">
+                                           id="a_subject_2{{alphabet}}{{subject_1}}{{subject_2}}"/>
+                                    <label for="a_subject_2{{alphabet}}{{subject_1}}{{subject_2}}">
                                         <Button class="fehrest-btn" name="a_subject_2" value="{{subject_2}}" onclick="">
                                             {{subject_2}}
                                         </Button>
@@ -182,8 +182,8 @@
                                                 <input name="a_expression"
                                                        value="{{e}}"
                                                        type="checkbox"
-                                                       id="a_expression{{e}}"/>
-                                                <label for="a_expression{{e}}">
+                                                       id="a_expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}"/>
+                                                <label for="a_expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}">
                                                     <Button class="fehrest-btn" name="a_expression" value="{{e}}">
                                                         {{e}}
                                                     </Button>
