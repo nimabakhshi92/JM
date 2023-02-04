@@ -81,7 +81,7 @@
     color: white;
 }
 .Hadis{
-    color:blue;
+    color:#0c288a;
 }
 .AyatFehrestButtons{
 width: 115px;
@@ -117,6 +117,8 @@ label{
 /* (B1) TOGGLE SHOW/HIDE */
 .section ul, .a_section ul { display: none; }
 .section input:checked ~ ul, .a_section input:checked ~ ul { display: block; }
+
+.section input:checked ~ label, .a_section input:checked ~ label { background-color: rgba(90, 255, 90, 0.3); }
 
 /* (B2) HIDE CHECKBOX */
 .section input[type=checkbox], .a_section input[type=checkbox]  { display: none; }

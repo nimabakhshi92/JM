@@ -18,6 +18,8 @@ urlpatterns = [
          name='filter_ayat_from_fehrest_subject'),
     path('filter_ahadis_from_fehrest_subject_a', views.filter_ahadis_from_fehrest_subject_a,
          name='filter_ahadis_from_fehrest_subject_a'),
+    path('filter_ahadis_from_fehrest_subject_b', views.filter_ahadis_from_fehrest_subject_b,
+         name='filter_ahadis_from_fehrest_subject_b'),
     path('check_hadis_repetition', views.check_hadis_repetition, name='check_hadis_repetition'),
     # path('test', views.test, name='test'),
 ]

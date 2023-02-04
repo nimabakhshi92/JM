@@ -97,17 +97,6 @@ class QuranVerse(models.Model):
         return self.verse_content
 
 
-class NarrationVerse(models.Model):
-    narration = models.ForeignKey(Narration, models.CASCADE)
-    quran_verse = models.ForeignKey(QuranVerse, models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'NarrationVerse'
-        unique_together = (('narration', 'quran_verse'),)
-
-
 class ContentSummaryTree(models.Model):
     narration = models.ForeignKey(Narration, models.CASCADE)
     alphabet = models.CharField(max_length=5)
@@ -125,3 +114,26 @@ class ContentSummaryTree(models.Model):
 
     def __str__(self):
         return self.expression
+
+
+class NarrationSubjectVerse(models.Model):
+    content_summary_tree = models.ForeignKey(ContentSummaryTree, models.CASCADE)
+    quran_verse = models.ForeignKey(QuranVerse, models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'NarrationSubjectVerse'
+        unique_together = (('content_summary_tree', 'quran_verse'),)
+
+
+class NarrationVerse(models.Model):
+    narration = models.ForeignKey(Narration, models.CASCADE)
+    quran_verse = models.ForeignKey(QuranVerse, models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'NarrationVerse'
+        unique_together = (('narration', 'quran_verse'),)
+

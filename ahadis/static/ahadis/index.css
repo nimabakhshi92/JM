@@ -16,10 +16,14 @@
   font-family: Nazanin;
   src: url(Nazanin.ttf);
 }
-body{
+body, form{
     font-size: 14px;
     width: 98%;
     margin: auto;
+    background-color: #eee;
+}
+form{
+    background-color: #e5e5e5;
 }
 input, select, button{
     border-radius: 5px;

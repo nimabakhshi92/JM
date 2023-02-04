@@ -188,10 +188,16 @@ def save_narration(request):
                     surah_name = item['surah_name']
                     verse_no = item['verse_no']
                     quran_verse = QuranVerse.objects.get(surah_name=surah_name, verse_no=verse_no)
+                    narration_subject_verse = NarrationSubjectVerse()
+                    narration_subject_verse.content_summary_tree = content_summary_tree
+                    narration_subject_verse.quran_verse = quran_verse
+                    narration_subject_verse.save()
+
                     narration_verse = NarrationVerse()
                     narration_verse.narration = narration
                     narration_verse.quran_verse = quran_verse
                     narration_verse.save()
+
         except:
             pass
 
@@ -370,6 +376,50 @@ def filter_ahadis_from_fehrest_subject_a(request):
                                                 })
 
 
+def filter_ahadis_from_fehrest_subject_b(request):
+    args = {}
+    surah_name = request.POST.get('surah_name')
+    if surah_name:
+        args['surah_name'] = surah_name
+    verse_no_content = request.POST.get('verse_content')
+    verse_content, verse_no = None, None
+    if verse_no_content:
+        dot_index = verse_no_content.find('.')
+        verse_no = int(verse_no_content[:dot_index])
+        verse_content = verse_no_content[(dot_index + 1):]
+    if verse_no:
+        args['verse_no'] = verse_no
+    if verse_content:
+        args['verse_content'] = verse_content
+    expression = request.POST.get('b_expression')
+    if expression:
+        args['expression'] = expression
+    summary = request.POST.get('b_summary')
+    if summary:
+        args['summary'] = summary
+    narration_id = request.POST.get('a_narration_id')
+    if narration_id:
+        args['narration_id'] = narration_id
+
+    filtered_content_summary_tree, filtered_content_summary_df = get_ayat_fehrest_serial(**args)
+    content_summary_tree, content_summary_df = get_content_summary_tree()
+    ayat_fehrest_serial, ayat_fehrest_serial_df = get_ayat_fehrest_serial()
+    verses_content_summary_tree, verses_content_summary_df = get_verses_content_summary_tree()
+
+    narration_ids = filtered_content_summary_df['narration_id'].unique().tolist()
+
+    show_all = request.POST.get('show-all')
+    if not show_all:
+        narrations = get_narrations(narration_ids)
+    else:
+        narrations = get_narrations()
+
+    return render(request, 'ahadis/show.html', {'ahadis': narrations, 'fehrest': content_summary_tree,
+                                                'ayat_fehrest': verses_content_summary_tree,
+                                                'ayat_fehrest_serial': ayat_fehrest_serial,
+                                                })
+
+
 def filter_ayat_from_fehrest_subject(request):
     args = {}
     surah_name = request.POST.get('surah_name')
@@ -400,7 +450,7 @@ def filter_ayat_from_fehrest_subject(request):
                   )
 
 
-def get_ayat_fehrest_serial(**kwargs):
+def get_ayat_fehrest_serial_new_old(**kwargs):
     narration_verses = NarrationVerse.objects.all().values(
         'narration__id', 'quran_verse__verse_no',
         'quran_verse__surah_no', 'quran_verse__surah_name',
@@ -431,6 +481,38 @@ def get_ayat_fehrest_serial(**kwargs):
         }
         result = result_json
     return result, result_df
+
+
+def get_ayat_fehrest_serial(**kwargs):
+    narration_verses = NarrationSubjectVerse.objects.all().values(
+        'quran_verse__surah_no', 'quran_verse__surah_name', 'quran_verse__verse_no', 'quran_verse__verse_content',
+        'content_summary_tree__narration__id', 'content_summary_tree__expression', 'content_summary_tree__summary',
+    )
+    narration_verses_df = pd.DataFrame(narration_verses)
+    narration_verses_df.columns = ['quran_verse__surah_no', 'quran_verse__surah_name',
+                                   'quran_verse__verse_no', 'quran_verse__verse_content',
+                                   'narration_id', 'quran_verse__expression', 'quran_verse__summary']
+    if kwargs:
+        for key, value in kwargs.items():
+            try:
+                value = int(value)
+            except:
+                pass
+            narration_verses_df = narration_verses_df[narration_verses_df[f'quran_verse__{key}'] == value]
+
+    narration_verses_df.sort_values(['quran_verse__surah_no', 'quran_verse__verse_no'], ascending=True, inplace=True)
+
+    narration_verses_df['verse_no_content'] = narration_verses_df.apply(
+        lambda row: str(row['quran_verse__verse_no']) + '.' + row['quran_verse__verse_content'], axis=1)
+    narration_verses_df.drop(['quran_verse__surah_no', 'quran_verse__verse_no', 'quran_verse__verse_content'], axis=1,
+                             inplace=True)
+    narration_verses_df = narration_verses_df[
+        ['quran_verse__surah_name', 'verse_no_content', 'narration_id', 'quran_verse__expression',
+         'quran_verse__summary']]
+    narration_verses_df.rename(columns={'narration__id': 'narration_id'}, inplace=True)
+    result_nested_json = nest(narration_verses_df, {})
+
+    return result_nested_json, narration_verses_df
 
 
 def remove_arabic_characters(string):
@@ -519,10 +601,12 @@ def nest(df, prev):
 def get_content_summary_tree(**kwargs):
     content_summary_tree = ContentSummaryTree.objects.filter(**kwargs).values()
     result = pd.DataFrame(content_summary_tree)
+
     result.replace('', None, inplace=True)
     column_names = ['alphabet', 'subject_1', 'subject_2']
     for i in range(1, len(column_names)):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
+
     result_df = result[['alphabet', 'subject_1', 'subject_2', 'narration_id', 'expression', 'summary']]
     result_nested_json = nest(result_df, {})
 
