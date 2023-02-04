@@ -36,10 +36,10 @@ class Imam(models.Model):
 
 class Narration(models.Model):
     name = models.CharField(max_length=200)
-    imam = models.ForeignKey('Imam', models.DO_NOTHING)
+    imam = models.ForeignKey('Imam', on_delete=models.CASCADE)
     narrator = models.CharField(max_length=200)
     content = models.TextField()
-    book = models.ForeignKey('Book', on_delete=models.DO_NOTHING)
+    book = models.ForeignKey('Book', on_delete=models.CASCADE)
     # book = models.ForeignKey('Book', on_delete=models.DO_NOTHING, related_name="narrations",
     #                          related_query_name="narration")
     book_vol_no = models.IntegerField()
@@ -56,7 +56,7 @@ class Narration(models.Model):
 
 
 class NarrationSubject(models.Model):
-    narration = models.ForeignKey(Narration, models.DO_NOTHING)
+    narration = models.ForeignKey(Narration, models.CASCADE)
     subject = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -69,7 +69,7 @@ class NarrationSubject(models.Model):
 
 
 class NarrationFootnote(models.Model):
-    narration = models.ForeignKey(Narration, models.DO_NOTHING)
+    narration = models.ForeignKey(Narration, models.CASCADE)
     expression = models.TextField()
     explanation = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -98,8 +98,8 @@ class QuranVerse(models.Model):
 
 
 class NarrationVerse(models.Model):
-    narration = models.ForeignKey(Narration, models.DO_NOTHING)
-    quran_verse = models.ForeignKey(QuranVerse, models.DO_NOTHING)
+    narration = models.ForeignKey(Narration, models.CASCADE)
+    quran_verse = models.ForeignKey(QuranVerse, models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
@@ -109,7 +109,7 @@ class NarrationVerse(models.Model):
 
 
 class ContentSummaryTree(models.Model):
-    narration = models.ForeignKey(Narration, models.DO_NOTHING)
+    narration = models.ForeignKey(Narration, models.CASCADE)
     alphabet = models.CharField(max_length=5)
     subject_1 = models.CharField(max_length=200)
     subject_2 = models.CharField(max_length=200)
