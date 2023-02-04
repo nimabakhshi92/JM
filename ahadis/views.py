@@ -171,26 +171,29 @@ def save_narration(request):
     ]
 
     for item in summaries_in_fehrest:
-        if item['subject_1'] and item['alphabet']:
-            if not item['summary']:
-                item['summaty'] = None
-            content_summary_tree = ContentSummaryTree(alphabet=item['alphabet'],
-                                                      subject_1=item['subject_1'],
-                                                      subject_2=item['subject_2'],
-                                                      expression=item['expression'],
-                                                      summary=item['summary'])
-            content_summary_tree.narration = narration
-            content_summary_tree.save()
+        try:
+            if item['subject_1'] and item['alphabet']:
+                if not item['summary']:
+                    item['summaty'] = None
+                content_summary_tree = ContentSummaryTree(alphabet=item['alphabet'],
+                                                          subject_1=item['subject_1'],
+                                                          subject_2=item['subject_2'],
+                                                          expression=item['expression'],
+                                                          summary=item['summary'])
+                content_summary_tree.narration = narration
+                content_summary_tree.save()
 
-            is_verse = item['is_verse']
-            if is_verse:
-                surah_name = item['surah_name']
-                verse_no = item['verse_no']
-                quran_verse = QuranVerse.objects.get(surah_name=surah_name, verse_no=verse_no)
-                narration_verse = NarrationVerse()
-                narration_verse.narration = narration
-                narration_verse.quran_verse = quran_verse
-                narration_verse.save()
+                is_verse = item['is_verse']
+                if is_verse:
+                    surah_name = item['surah_name']
+                    verse_no = item['verse_no']
+                    quran_verse = QuranVerse.objects.get(surah_name=surah_name, verse_no=verse_no)
+                    narration_verse = NarrationVerse()
+                    narration_verse.narration = narration
+                    narration_verse.quran_verse = quran_verse
+                    narration_verse.save()
+        except:
+            pass
 
     # cursor = conn.cursor()
     # for item in ayat:
