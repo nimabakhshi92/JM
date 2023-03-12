@@ -37,7 +37,7 @@ class Imam(models.Model):
 class Narration(models.Model):
     name = models.CharField(max_length=200)
     imam = models.ForeignKey('Imam', on_delete=models.CASCADE)
-    narrator = models.CharField(max_length=200)
+    narrator = models.TextField()
     content = models.TextField()
     book = models.ForeignKey('Book', on_delete=models.CASCADE)
     # book = models.ForeignKey('Book', on_delete=models.DO_NOTHING, related_name="narrations",
