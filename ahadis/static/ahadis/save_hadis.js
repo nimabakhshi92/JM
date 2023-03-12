@@ -58,16 +58,16 @@ const fillFootnotesAutomatically = function(){
     if(user_verse_text){
         let i = 1
         while(true){
-            if(user_verse_text.indexOf('$')===-1)
+            if(user_verse_text.indexOf('%')===-1)
                 break
 
-                let idx1 = user_verse_text.indexOf('$')
+                let idx1 = user_verse_text.indexOf('%')
                 user_verse_text = setCharAt(user_verse_text, idx1, 'a')
                 console.log(idx1)
-                 if(user_verse_text.indexOf('$')===-1)
+                 if(user_verse_text.indexOf('%')===-1)
                 break
 
-                let idx2 = user_verse_text.indexOf('$')
+                let idx2 = user_verse_text.indexOf('%')
                 user_verse_text = setCharAt(user_verse_text, idx2, 'a')
                 console.log(idx2)
                 let note = user_verse_text.substring(idx1+1, idx2)
