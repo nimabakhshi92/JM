@@ -1,5 +1,6 @@
 const el = document.getElementById('quran-data').textContent
 const quran = JSON.parse(el)['quran'];
+console.log('allInputs')
 
 function setCharAt(str,index,chr) {
     if(index > str.length-1) return str;
@@ -86,6 +87,24 @@ function copy(i){
     }
 }
 
+let classes = ['.fehrest-subject-input','.fehrest-input','.InputOne','.InputSubject']
+
+classes.forEach(className=>{
+const allInputs = document.querySelectorAll(className)
+console.log(allInputs)
+allInputs.forEach((input)=>{
+    const defaultWidth = input.style.width
+    input.addEventListener('mouseenter', ()=>{
+    let newWidth = (input.value.length + 1) * 8
+    if(newWidth>140)
+        input.style.width = newWidth + 'px'
+    })
+    input.addEventListener('mouseleave', ()=>{
+        input.style.width = defaultWidth
+    })
+})
+
+})
 
 for(let i=1; i<100; i++){
     document.getElementById('surah_name'+i).addEventListener('change', ()=>selectSurah(i))
@@ -94,4 +113,7 @@ for(let i=1; i<100; i++){
     document.getElementById('copy'+i).addEventListener('click', ()=>copy(i))
     selectSurah(i)
 }
+
 fillFootnotesAutomatically()
+
+

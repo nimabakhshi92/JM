@@ -510,7 +510,7 @@ def get_ayat_fehrest_serial(**kwargs):
         ['quran_verse__surah_name', 'verse_no_content', 'narration_id', 'quran_verse__expression',
          'quran_verse__summary']]
     narration_verses_df.rename(columns={'narration__id': 'narration_id'}, inplace=True)
-    result_nested_json = nest(narration_verses_df, {})
+    result_nested_json = nest(narration_verses_df)
 
     return result_nested_json, narration_verses_df
 
@@ -587,12 +587,12 @@ def get_content_summary_tree_old():
     return result
 
 
-def nest(df, prev):
+def nest(df):
     if len(df.columns) == 1:
         return list(df.iloc[:, 0])
     first_col_name = df.columns[0]
     output = {
-        key: nest(df[df[first_col_name] == key].drop(first_col_name, axis=1), prev)
+        key: nest(df[df[first_col_name] == key].drop(first_col_name, axis=1))
         for key in df[first_col_name].unique() if key
     }
     return output
@@ -608,7 +608,8 @@ def get_content_summary_tree(**kwargs):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
 
     result_df = result[['alphabet', 'subject_1', 'subject_2', 'narration_id', 'expression', 'summary']]
-    result_nested_json = nest(result_df, {})
+    result_df.sort_values(by=['alphabet', 'subject_1', 'subject_2'], inplace=True)
+    result_nested_json = nest(result_df)
 
     return result_nested_json, result_df
 
@@ -628,7 +629,9 @@ def get_verses_content_summary_tree(**kwargs):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
     result_df = result[
         ['alphabet', 'subject_1', 'subject_2', 'narration_id', 'expression', 'summary']].drop_duplicates()
-    result_nested_json = nest(result_df, {})
+    result_df.sort_values(by=['alphabet', 'subject_1', 'subject_2'], inplace=True)
+
+    result_nested_json = nest(result_df)
 
     return result_nested_json, result_df
 
