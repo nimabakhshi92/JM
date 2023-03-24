@@ -307,12 +307,12 @@ def filter_ahadis_from_fehrest_subject(request):
     subject_2 = request.POST.get('subject_2')
     if subject_2:
         args['subject_2'] = subject_2
-    subject_3 = request.POST.get('subject_3')
+    subject_3 = request.POST.get('expression')
     if subject_3:
-        args['subject_3'] = subject_3
-    subject_4 = request.POST.get('subject_4')
+        args['expression'] = subject_3
+    subject_4 = request.POST.get('summary')
     if subject_4:
-        args['subject_4'] = subject_4
+        args['summary'] = subject_4
     narration_id = request.POST.get('narration_id')
     if narration_id:
         args['narration_id'] = narration_id
@@ -347,12 +347,12 @@ def filter_ahadis_from_fehrest_subject_a(request):
     subject_2 = request.POST.get('a_subject_2')
     if subject_2:
         args['subject_2'] = subject_2
-    subject_3 = request.POST.get('a_subject_3')
+    subject_3 = request.POST.get('a_expression')
     if subject_3:
-        args['subject_3'] = subject_3
-    subject_4 = request.POST.get('a_subject_4')
+        args['expression'] = subject_3
+    subject_4 = request.POST.get('a_summary')
     if subject_4:
-        args['subject_4'] = subject_4
+        args['summary'] = subject_4
     narration_id = request.POST.get('a_narration_id')
     if narration_id:
         args['narration_id'] = narration_id
@@ -507,7 +507,7 @@ def get_ayat_fehrest_serial(**kwargs):
     narration_verses_df.drop(['quran_verse__surah_no', 'quran_verse__verse_no', 'quran_verse__verse_content'], axis=1,
                              inplace=True)
     narration_verses_df = narration_verses_df[
-        ['quran_verse__surah_name', 'verse_no_content', 'narration_id', 'quran_verse__expression',
+        ['quran_verse__surah_name', 'verse_no_content', 'quran_verse__expression', 'narration_id',
          'quran_verse__summary']]
     narration_verses_df.rename(columns={'narration__id': 'narration_id'}, inplace=True)
     result_nested_json = nest(narration_verses_df)
@@ -607,7 +607,7 @@ def get_content_summary_tree(**kwargs):
     for i in range(1, len(column_names)):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
 
-    result_df = result[['alphabet', 'subject_1', 'subject_2', 'narration_id', 'expression', 'summary']]
+    result_df = result[['alphabet', 'subject_1', 'subject_2', 'expression', 'narration_id', 'summary']]
     result_df.sort_values(by=['alphabet', 'subject_1', 'subject_2'], inplace=True)
     result_nested_json = nest(result_df)
 
@@ -628,7 +628,7 @@ def get_verses_content_summary_tree(**kwargs):
     for i in range(1, len(column_names)):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
     result_df = result[
-        ['alphabet', 'subject_1', 'subject_2', 'narration_id', 'expression', 'summary']].drop_duplicates()
+        ['alphabet', 'subject_1', 'subject_2', 'expression', 'narration_id', 'summary']].drop_duplicates()
     result_df.sort_values(by=['alphabet', 'subject_1', 'subject_2'], inplace=True)
 
     result_nested_json = nest(result_df)

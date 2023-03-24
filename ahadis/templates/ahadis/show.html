@@ -57,20 +57,20 @@
                                         </Button>
                                     </label>
                                     <ul>
-                                        {% for narration_id, narration_id_value in subject_2_value.items %}
+                                        {% for e , e_value in subject_2_value.items %}
                                         <li class="section fehrest-narration-container">
-                                            {% for e, s_l in narration_id_value.items %}
                                             <div class="summary-container">
                                                 <input name="expression"
                                                        value="{{e}}"
                                                        type="checkbox"
-                                                       id="expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}{{forloop.counter}}{{narration_id}}"/>
-                                                <label for="expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}{{forloop.counter}}{{narration_id}}">
+                                                       id="expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}{{forloop.counter}}"/>
+                                                <label for="expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}{{forloop.counter}}">
                                                     <Button class="fehrest-btn" name="expression" value="{{e}}">
                                                         {{e}}
                                                     </Button>
                                                 </label>
                                                 <ul>
+                                                    {% for narration_id, s_l in e_value.items %}
                                                     {% for summary in s_l %}
                                                     <li>
                                                         <Button class="fehrest-btn" name="summary"
@@ -79,9 +79,10 @@
                                                         </Button>
                                                     </li>
                                                     {% endfor %}
+                                                    {% endfor %}
+
                                                 </ul>
                                             </div>
-                                            {% endfor %}
                                         <li>
                                             {% endfor %}
                                     </ul>
@@ -131,20 +132,20 @@
                                 </Button>
                             </label>
                             <ul id="df">
-                                {% for narration_id, narration_id_value in expl_expr.items %}
+                                {% for e , e_value in expl_expr.items %}
                                 <li class="a_section fehrest-narration-container">
-                                    {% for e, s_l in narration_id_value.items %}
                                     <div class="summary-container">
                                         <input name="b_expression"
                                                value="{{e}}"
                                                type="checkbox"
-                                               id="b_expression{{surah_name}}{{verse_content}}{{e}}{{forloop.counter}}{{narration_id}}"/>
-                                        <label for="b_expression{{surah_name}}{{verse_content}}{{e}}{{forloop.counter}}{{narration_id}}">
+                                               id="b_expression{{surah_name}}{{verse_content}}{{e}}{{forloop.counter}}"/>
+                                        <label for="b_expression{{surah_name}}{{verse_content}}{{e}}{{forloop.counter}}">
                                             <Button class="fehrest-btn" name="a_expression" value="{{e}}">
                                                 {{e}}
                                             </Button>
                                         </label>
                                         <ul>
+                                            {% for narration_id, s_l in e_value.items %}
                                             {% for summary in s_l %}
                                             <li>
                                                 <Button class="fehrest-btn" name="b_summary"
@@ -153,9 +154,9 @@
                                                 </Button>
                                             </li>
                                             {% endfor %}
+                                            {% endfor %}
                                         </ul>
                                     </div>
-                                    {% endfor %}
                                 <li>
                                     {% endfor %}
                             </ul>
@@ -214,20 +215,20 @@
                                         </Button>
                                     </label>
                                     <ul>
-                                        {% for narration_id, narration_id_value in subject_2_value.items %}
+                                        {% for e, e_value in subject_2_value.items %}
                                         <li class="a_section fehrest-narration-container">
-                                            {% for e, s_l in narration_id_value.items %}
                                             <div class="summary-container">
                                                 <input name="a_expression"
                                                        value="{{e}}"
                                                        type="checkbox"
-                                                       id="a_expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}{{forloop.counter}}{{narration_id}}"/>
-                                                <label for="a_expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}{{forloop.counter}}{{narration_id}}">
+                                                       id="a_expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}{{forloop.counter}}"/>
+                                                <label for="a_expression{{alphabet}}{{subject_1}}{{subject_2}}{{e}}{{forloop.counter}}">
                                                     <Button class="fehrest-btn" name="a_expression" value="{{e}}">
                                                         {{e}}
                                                     </Button>
                                                 </label>
                                                 <ul>
+                                            {% for narration_id, s_l in e_value.items %}
                                                     {% for summary in s_l %}
                                                     <li>
                                                         <Button class="fehrest-btn" name="a_summary"
@@ -236,9 +237,9 @@
                                                         </Button>
                                                     </li>
                                                     {% endfor %}
+                                            {% endfor %}
                                                 </ul>
                                             </div>
-                                            {% endfor %}
                                         <li>
                                             {% endfor %}
                                     </ul>
