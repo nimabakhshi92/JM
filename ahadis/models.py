@@ -99,7 +99,7 @@ class QuranVerse(models.Model):
 
 class ContentSummaryTree(models.Model):
     narration = models.ForeignKey(Narration, models.CASCADE)
-    alphabet = models.CharField(max_length=5)
+    alphabet = models.CharField(max_length=200)
     subject_1 = models.CharField(max_length=200)
     subject_2 = models.CharField(max_length=200)
     subject_3 = models.CharField(max_length=200)
