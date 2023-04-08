@@ -607,7 +607,8 @@ def get_content_summary_tree(**kwargs):
     for i in range(1, len(column_names)):
         result[column_names[i]].fillna(result[column_names[i - 1]], inplace=True)
 
-    result_df = result[['alphabet', 'subject_1', 'subject_2', 'expression', 'narration_id', 'summary']]
+    result_df = result[
+        ['alphabet', 'subject_1', 'subject_2', 'expression', 'narration_id', 'summary']].drop_duplicates()
     result_df.sort_values(by=['alphabet', 'subject_1', 'subject_2'], inplace=True)
     result_nested_json = nest(result_df)
 
