@@ -26,105 +26,119 @@ class FlattenMixin(object):
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = '__all__'
+        fields = ['name', 'publisher']
 
 
 class ImamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Imam
-        fields = '__all__'
+        fields = ['name']
 
 
-# class NarrationSerializer(serializers.ModelSerializer):
-#     book = BookSerializer()
-#     imam = ImamSerializer()
-#     narration = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = Narration
-#         fields = ('book', 'narration', 'imam')
-#
-#     def get_narration(self, obj):
-#         return obj
+class FootNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NarrationFootnote
+        fields = ['expression', 'explanation']
 
-
-# class NarrationSerializer(serializers.HyperlinkedModelSerializer):
-#     imam_name = serializers.Field(source='imam.name')
-#     imam_created = serializers.Field(source='imam.created')
-#
-#     class Meta:
-#         model = Narration
-#         fields = ('id', 'narrator', 'content', 'imam_name', 'imam_created')
-
-
-# class NarrationSerializer(serializers.ModelSerializer):
-#     imam = ImamSerializer()
-#
-#     class Meta:
-#         model = Narration
-#         fields = ('id', 'narrator', 'content', 'imam')
-#
-#     def to_representation(self, instance):
-#         data = super(NarrationSerializer, self).to_representation(instance)
-#         imam = data.pop('imam')
-#         for key, val in imam.items():
-#             data.update({key: val})
-#         return data
-
-
-# class NarrationSubjectSerializer(serializers.ModelSerializer):
-#     narration = NarrationSerializer()
-#     narration_subject = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = NarrationSubject
-#         fields = ('narration', 'narration_subject')
-#
-#     def get_narration_subject(self, obj):
-#         return obj
 
 class NarrationSubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = NarrationSubject
 
 
-# class NarrationSerializer(FlattenMixin, serializers.HyperlinkedModelSerializer):
-#     class Meta:
-#         model = Narration
-#         fields = ('id', 'name', 'narrator', 'content', 'book_vol_no', 'book_page_no', 'book_narration_no')
-#         flatten = [('imam', ImamSerializer), ('narrationsubject', NarrationSubjectSerializer)]
-
-#
-# class NarrationSerializer(serializers.HyperlinkedModelSerializer):
-#     imam_name = serializers.Field(source='imam.name')
-#     imam_created = serializers.Field(source='imam.created')
-#
-#     class Meta:
-#         model = Narration
-#         fields = ('id', 'narrator', 'content', 'imam_name', 'imam_created')
-
-# class NarrationSerializer(serializers.ModelSerializer):
-#     imam = ImamSerializer()
-#     narrationsubject = NarrationSubjectSerializer()
-#
-#     class Meta:
-#         model = Narration
-#         fields = ('id', 'narrator', 'content', 'imam', 'narrationsubject')
-#
-#     def to_representation(self, instance):
-#         data = super(NarrationSerializer, self).to_representation(instance)
-#         imam = data.pop('imam')
-#         for key, val in imam.items():
-#             data.update({key: val})
-#         narrationsubject = data.pop('narrationsubject')
-#         for key, val in narrationsubject.items():
-#             data.update({key: val})
-#         return data
-
 class NarrationSerializer(serializers.ModelSerializer):
     imam = ImamSerializer()
-
+    book = BookSerializer()
+    footnote = FootNoteSerializer(many=True)
 
     class Meta:
         model = Narration
+        # fields = ['name', 'narrator', 'content', 'book_vol_no', 'book_page_no', 'book_narration_no', 'created',
+        #           'modified', 'book', 'imam', 'footnote']
         fields = '__all__'
+
+
+# ////////////////////////////////// API
+
+
+class ContentSerializer(serializers.Serializer):
+    expression = serializers.CharField()
+    summary = serializers.CharField()
+
+
+class SubSubjectSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=200)
+    content = ContentSerializer(many=True)
+
+
+class SubjectSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=200)
+    sub_subjects = SubSubjectSerializer(many=True)
+
+
+class AlphabetSerializer(serializers.Serializer):
+    alphabet = serializers.CharField(max_length=200)
+    subjects = SubjectSerializer(many=True)
+
+#
+# class BookSerializer1(serializers.ModelSerializer):
+#
+#     class Meta:
+#         model = Book1
+#         fields = '__all__'
+#
+#
+# class ImamSerializer2(serializers.ModelSerializer):
+#     class Meta:
+#         model = Imam1
+#         fields = '__all__'
+#
+#
+# class NarrationSubject1Serializer1(serializers.ModelSerializer):
+#     class Meta:
+#         model = NarrationSubject1
+#         fields = '__all__'
+#
+#
+# class NarrationSerializer1(serializers.ModelSerializer):
+#     imam = ImamSerializer2()
+#     book = BookSerializer1()
+#     subjects = NarrationSubject1Serializer1(many=True, read_only=True)
+#
+#     class Meta:
+#         model = Narration1
+#         fields = ['id', 'name', 'book', 'imam', 'subjects']
+#
+#
+# class ImamSerializer1(serializers.ModelSerializer):
+#     narration = NarrationSerializer1(many=True, read_only=True)
+#
+#     class Meta:
+#         model = Imam1
+#         fields = ['name', 'narration']
+#         # exclude = ('narration', )
+#
+#
+# class ContentSummaryTree1Serializer(serializers.ModelSerializer):
+#     # narration = NarrationSerializer1(many=True, read_only=True)
+#     subjects = serializers.SerializerMethodField()
+#
+#     class Meta:
+#         model = ContentSummaryTree1
+#         fields = ['alphabet', 'subjects']
+#         # exclude = ('narration', )
+#
+#     def get_subjects(self, obj):
+#         # queryset = ContentSummaryTree1.objects.filter(alphabet=obj.get('alphabet'))
+#         # return [item.subject_1 for item in queryset]
+#         queryset = ContentSummaryTree1.objects.filter(alphabet=obj.get('alphabet')).values_list('subject_1', flat=True)
+#         return list(queryset)
+#
+#
+# class ContentSummaryTree1FlatSerializer(serializers.ModelSerializer):
+#     # narration = NarrationSerializer1(many=True, read_only=True)
+#
+#     class Meta:
+#         model = ContentSummaryTree1
+#         fields = '__all__'
+#         # exclude = ('narration', )

@@ -1,9 +1,20 @@
-from django.urls import path
+from django.urls import path, include
 from django.views.decorators.cache import cache_page
 from . import views
+from . import viewsets
+from rest_framework.routers import DefaultRouter
 
 app_name = 'ahadis'
+
+# router = DefaultRouter()
+# router.register('book1', viewsets.Books1VS, basename='book-1')
+# router.register('imam1', viewsets.Imam1VS, basename='imam-1')
+# router.register('narration1', viewsets.Narration1VS, basename='narration1')
+# router.register('subjects1', viewsets.NarrationSubject1VS, basename='subjects1')
+# router.register('table_of_contents', viewsets.ContentSummaryTree1VS, basename='table_of_contents')
+
 urlpatterns = [
+    # path('api/', include(router.urls)),
     path('save_hadis_page', views.save_narration_page, name='save_hadis_page'),
     path('save_hadis', views.save_narration, name='save_hadis'),
     path('', views.show, name='show'),
@@ -22,4 +33,10 @@ urlpatterns = [
          name='filter_ahadis_from_fehrest_subject_b'),
     path('check_hadis_repetition', views.check_hadis_repetition, name='check_hadis_repetition'),
     # path('test', views.test, name='test'),
+
+    #     //////////////////////////////////////////// API
+    # path('Book1', viewsets.Books1VS.as_view(), name='book-1')
+    path('api/table_of_contents/', viewsets.TableOfContentsView.as_view(), name='table_of_contents'),
+    path('api/narrations_list/', viewsets.NarrationView.as_view(), name='narrations_list'),
+
 ]
