@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import *
-
+from django.contrib.auth.models import User
 
 class FlattenMixin(object):
     """Flatens the specified related objects in this representation"""
@@ -79,6 +79,52 @@ class SubjectSerializer(serializers.Serializer):
 class AlphabetSerializer(serializers.Serializer):
     alphabet = serializers.CharField(max_length=200)
     subjects = SubjectSerializer(many=True)
+
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from datetime import datetime
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        refresh = self.get_token(self.user)
+        data['expires_at'] = datetime.now() + refresh.access_token.lifetime
+
+        return data
+
+
+class MyTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        refresh = self.token_class(attrs["refresh"])
+        data['expires_aat'] = datetime.now() + refresh.access_token.lifetime
+
+        return data
+
+
+class MyUserRegisterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'password', 'email']
+        extra_kwargs = {'password' : {'write_only': True}}
+
+    def create(self, validated_data):
+        username = validated_data.get('username')
+        password = validated_data.get('password')
+        email = validated_data.get('email')
+
+        user = User(username=username, email=email)
+        user.set_password(password)
+        user.save()
+
+        return user
+
+
+
 
 #
 # class BookSerializer1(serializers.ModelSerializer):

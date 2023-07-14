@@ -1,9 +1,10 @@
+from rest_framework.authtoken.views import obtain_auth_token
 from django.urls import path, include
 from django.views.decorators.cache import cache_page
 from . import views
 from . import viewsets
 from rest_framework.routers import DefaultRouter
-
+from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 app_name = 'ahadis'
 
 # router = DefaultRouter()
@@ -36,7 +37,12 @@ urlpatterns = [
 
     #     //////////////////////////////////////////// API
     # path('Book1', viewsets.Books1VS.as_view(), name='book-1')
+    path('api/token/', viewsets.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', viewsets.MyTokenRefreshView.as_view(), name='token_refresh'),
+    path('api/register/', viewsets.MyUserRegisterView.as_view(), name='register'),
+
     path('api/table_of_contents/', viewsets.TableOfContentsView.as_view(), name='table_of_contents'),
     path('api/narrations_list/', viewsets.NarrationView.as_view(), name='narrations_list'),
+    # path('api/login/', obtain_auth_token)
 
 ]

@@ -4,6 +4,18 @@ from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .serializers import MyTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
+
+class MyTokenRefreshView(TokenRefreshView):
+    serializer_class = MyTokenRefreshSerializer
 
 
 class TableOfContentsView(APIView):
@@ -75,6 +87,8 @@ class TableOfContentsView(APIView):
 class NarrationView(generics.ListAPIView):
     serializer_class = NarrationSerializer
 
+    # permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         alphabet = self.request.query_params.get('alphabet', None)
         subject = self.request.query_params.get('subject', None)
@@ -87,3 +101,33 @@ class NarrationView(generics.ListAPIView):
         if sub_subject:
             queryset = queryset.filter(content_summary_tree__subject_2=sub_subject)
         return queryset
+
+
+class MyUserRegisterView(generics.CreateAPIView):
+    permission_classes = []
+
+    def create(self, request, *args, **kwargs):
+        user_data = request.data
+        user_data._mutable = True
+        user_data['email'] = user_data.get('username')
+        serialized = MyUserRegisterSerializer(data=user_data)
+
+        data = {}
+
+        if serialized.is_valid():
+            user = serialized.save()
+
+            data['id'] = user.id
+            data['username'] = user.username
+            refresh = RefreshToken.for_user(user)
+            data['token'] = {
+                'token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+                'expires_at' : datetime.now() + refresh.access_token.lifetime
+
+            }
+
+            return Response(data, status=status.HTTP_201_CREATED)
+        else:
+            data = serialized.errors
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
