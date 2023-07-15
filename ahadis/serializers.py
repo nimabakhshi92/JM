@@ -2,25 +2,8 @@ from rest_framework import serializers
 from .models import *
 from django.contrib.auth.models import User
 
-class FlattenMixin(object):
-    """Flatens the specified related objects in this representation"""
-
-    def to_representation(self, obj):
-        assert hasattr(self.Meta, 'flatten'), (
-            'Class {serializer_class} missing "Meta.flatten" attribute'.format(
-                serializer_class=self.__class__.__name__
-            )
-        )
-        # Get the current object representation
-        rep = super(FlattenMixin, self).to_representation(obj)
-        # Iterate the specified related objects with their serializer
-        for field, serializer_class in self.Meta.flatten:
-            serializer = serializer_class(context=self.context)
-            objrep = serializer.to_representation(getattr(obj, field))
-            # Include their fields, prefixed, in the current   representation
-            for key in objrep:
-                rep[field + "_" + key] = objrep[key]
-        return rep
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from datetime import datetime
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -53,14 +36,10 @@ class NarrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Narration
-        # fields = ['name', 'narrator', 'content', 'book_vol_no', 'book_page_no', 'book_narration_no', 'created',
-        #           'modified', 'book', 'imam', 'footnote']
         fields = '__all__'
 
 
 # ////////////////////////////////// API
-
-
 class ContentSerializer(serializers.Serializer):
     expression = serializers.CharField()
     summary = serializers.CharField()
@@ -79,12 +58,6 @@ class SubjectSerializer(serializers.Serializer):
 class AlphabetSerializer(serializers.Serializer):
     alphabet = serializers.CharField(max_length=200)
     subjects = SubjectSerializer(many=True)
-
-
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken
-from datetime import datetime
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -106,11 +79,10 @@ class MyTokenRefreshSerializer(TokenRefreshSerializer):
 
 
 class MyUserRegisterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ['id', 'username', 'password', 'email']
-        extra_kwargs = {'password' : {'write_only': True}}
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         username = validated_data.get('username')
@@ -122,9 +94,6 @@ class MyUserRegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
-
-
-
 
 #
 # class BookSerializer1(serializers.ModelSerializer):

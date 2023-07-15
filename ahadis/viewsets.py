@@ -10,6 +10,37 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
+class MyUserRegisterView(generics.CreateAPIView):
+    permission_classes = []
+
+    def create(self, request, *args, **kwargs):
+        user_data = request.data
+        user_data._mutable = True
+        user_data['username'] = user_data.get('email')
+        serialized = MyUserRegisterSerializer(data=user_data)
+
+        data = {}
+
+        if serialized.is_valid():
+            user = serialized.save()
+
+            data['id'] = user.id
+            data['username'] = user.username
+            data['email'] = user.email
+            refresh = RefreshToken.for_user(user)
+            data['token'] = {
+                'token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+                'expires_at' : datetime.now() + refresh.access_token.lifetime
+
+            }
+
+            return Response(data, status=status.HTTP_201_CREATED)
+        else:
+            data = serialized.errors
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
@@ -103,31 +134,3 @@ class NarrationView(generics.ListAPIView):
         return queryset
 
 
-class MyUserRegisterView(generics.CreateAPIView):
-    permission_classes = []
-
-    def create(self, request, *args, **kwargs):
-        user_data = request.data
-        user_data._mutable = True
-        user_data['email'] = user_data.get('username')
-        serialized = MyUserRegisterSerializer(data=user_data)
-
-        data = {}
-
-        if serialized.is_valid():
-            user = serialized.save()
-
-            data['id'] = user.id
-            data['username'] = user.username
-            refresh = RefreshToken.for_user(user)
-            data['token'] = {
-                'token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-                'expires_at' : datetime.now() + refresh.access_token.lifetime
-
-            }
-
-            return Response(data, status=status.HTTP_201_CREATED)
-        else:
-            data = serialized.errors
-        return Response(data, status=status.HTTP_400_BAD_REQUEST)

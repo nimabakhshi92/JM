@@ -37,9 +37,9 @@ urlpatterns = [
 
     #     //////////////////////////////////////////// API
     # path('Book1', viewsets.Books1VS.as_view(), name='book-1')
-    path('api/token/', viewsets.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', viewsets.MyTokenRefreshView.as_view(), name='token_refresh'),
     path('api/register/', viewsets.MyUserRegisterView.as_view(), name='register'),
+    path('api/login/', viewsets.MyTokenObtainPairView.as_view(), name='login'),
+    path('api/token/refresh/', viewsets.MyTokenRefreshView.as_view(), name='token_refresh'),
 
     path('api/table_of_contents/', viewsets.TableOfContentsView.as_view(), name='table_of_contents'),
     path('api/narrations_list/', viewsets.NarrationView.as_view(), name='narrations_list'),
