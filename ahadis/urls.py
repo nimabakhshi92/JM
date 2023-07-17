@@ -7,11 +7,14 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 app_name = 'ahadis'
 
-# router = DefaultRouter()
-# router.register('book1', viewsets.Books1VS, basename='book-1')
-# router.register('imam1', viewsets.Imam1VS, basename='imam-1')
+router = DefaultRouter()
+router.register('book', viewsets.BookVS, basename='book')
+router.register('imam', viewsets.ImamVS, basename='imam')
+router.register('subject', viewsets.SubjectVS, basename='subjects')
+router.register('quran_surah', viewsets.QuranSurahVS, basename='quran_surah')
+router.register('quran', viewsets.QuranVS, basename='quran')
+router.register('narration', viewsets.NarrationVS, basename='narration')
 # router.register('narration1', viewsets.Narration1VS, basename='narration1')
-# router.register('subjects1', viewsets.NarrationSubject1VS, basename='subjects1')
 # router.register('table_of_contents', viewsets.ContentSummaryTree1VS, basename='table_of_contents')
 
 urlpatterns = [
@@ -42,7 +45,7 @@ urlpatterns = [
     path('api/token/refresh/', viewsets.MyTokenRefreshView.as_view(), name='token_refresh'),
 
     path('api/table_of_contents/', viewsets.TableOfContentsView.as_view(), name='table_of_contents'),
-    path('api/narrations_list/', viewsets.NarrationView.as_view(), name='narrations_list'),
-    # path('api/login/', obtain_auth_token)
+    # path('api/narrations_list/', viewsets.NarrationVS.as_view(), name='narrations_list'),
+    path('api/', include(router.urls) )
 
 ]

@@ -8,7 +8,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .serializers import MyTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from rest_framework import mixins, viewsets
+from django.db.models import Max
 
 class MyUserRegisterView(generics.CreateAPIView):
     permission_classes = []
@@ -31,7 +32,7 @@ class MyUserRegisterView(generics.CreateAPIView):
             data['token'] = {
                 'token': str(refresh.access_token),
                 'refresh_token': str(refresh),
-                'expires_at' : datetime.now() + refresh.access_token.lifetime
+                'expires_at': datetime.now() + refresh.access_token.lifetime
 
             }
 
@@ -50,14 +51,7 @@ class MyTokenRefreshView(TokenRefreshView):
 
 
 class TableOfContentsView(APIView):
-    # def post(self, request):
-    #     print(request.data)
-    #     serializer = ContentSummaryTree1FlatSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     else:
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    permission_classes = []
 
     def get(self, request):
         queryset = ContentSummaryTree.objects.values(
@@ -115,10 +109,9 @@ class TableOfContentsView(APIView):
         return Response(serializer.validated_data)
 
 
-class NarrationView(generics.ListAPIView):
+class NarrationVS(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin):
+    permission_classes = []
     serializer_class = NarrationSerializer
-
-    # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         alphabet = self.request.query_params.get('alphabet', None)
@@ -132,5 +125,51 @@ class NarrationView(generics.ListAPIView):
         if sub_subject:
             queryset = queryset.filter(content_summary_tree__subject_2=sub_subject)
         return queryset
+
+
+class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+             viewsets.GenericViewSet):
+    permission_classes = []
+    serializer_class = BookSerializer
+    queryset = Book.objects.all()
+
+
+class ImamVS(mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = []
+    serializer_class = ImamSerializer
+    queryset = Imam.objects.all()
+
+
+class SubjectVS(viewsets.ViewSet):
+    permission_classes = []
+
+    def list(self, request):
+        subjects = NarrationSubject.objects.values_list('subject', flat=True).distinct()
+        serializer = NarrationSubjectSerializer({'subjects': subjects})
+        return Response(serializer.data)
+
+
+class QuranSurahVS(viewsets.GenericViewSet, mixins.ListModelMixin):
+    permission_classes = []
+    serializer_class = QuranSurahSerializer
+    queryset = QuranVerse.objects.values('surah_no', 'surah_name').annotate(no_of_verses=Max('verse_no'))
+
+
+class QuranVS(viewsets.GenericViewSet, mixins.ListModelMixin):
+    permission_classes = []
+    serializer_class = QuranVerseSerializer
+
+    def get_queryset(self):
+        surah_no = self.request.query_params.get('surah_no')
+        verse_no = self.request.query_params.get('verse_no')
+
+        queryset = QuranVerse.objects.all()
+        if surah_no:
+            queryset = queryset.filter(surah_no=surah_no)
+        if verse_no:
+            queryset = queryset.filter(verse_no=verse_no)
+
+        return queryset
+
 
 

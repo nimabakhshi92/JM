@@ -40,8 +40,6 @@ class Narration(models.Model):
     narrator = models.TextField()
     content = models.TextField()
     book = models.ForeignKey('Book', on_delete=models.CASCADE)
-    # book = models.ForeignKey('Book', on_delete=models.DO_NOTHING, related_name="narrations",
-    #                          related_query_name="narration")
     book_vol_no = models.IntegerField()
     book_page_no = models.IntegerField()
     book_narration_no = models.IntegerField()
