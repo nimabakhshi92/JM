@@ -7,10 +7,29 @@ from datetime import datetime
 from django.shortcuts import get_object_or_404
 
 
+class QuranSurahSerializer(serializers.Serializer):
+    surah_no = serializers.IntegerField()
+    surah_name = serializers.CharField(max_length=100)
+    no_of_verses = serializers.IntegerField()
+
+
+class QuranVerseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuranVerse
+        fields = ['id', 'surah_no', 'surah_name', 'verse_no', 'verse_content']
+
+
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = '__all__'
+        exclude = ['created', 'modified']
+        extra_kwargs = {
+            'publisher': {'write_only': True},
+            'author': {'write_only': True},
+            'subject': {'write_only': True},
+            'language': {'write_only': True},
+            'source_type': {'write_only': True}
+        }
 
 
 class ImamSerializer(serializers.ModelSerializer):
@@ -22,81 +41,191 @@ class ImamSerializer(serializers.ModelSerializer):
 class FootNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = NarrationFootnote
-        fields = ['expression', 'explanation']
+        fields = ['id', 'expression', 'explanation']
 
 
-# NOT needed yet.
-# class NarrationSubjectSerializer1(serializers.ModelSerializer):
-#     class Meta:
-#         model = NarrationSubject
-#         fields = ['subject']
-#         # fields = '__all__'
+#########################################################################################################
+########################################## Narration Subject ############################################
+
+class NarrationSubjectModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NarrationSubject
+        fields = ['id', 'subject', 'narration']
+        extra_kwargs = {
+            'narration': {
+                'write_only': True
+            }
+        }
 
 
-class NarrationSubjectSerializer(serializers.Serializer):
+class NarrationSubjectRelatedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NarrationSubject
+        fields = ['id', 'subject']
+
+
+class NarrationSubjectListSerializer(serializers.Serializer):
     subjects = serializers.ListField(child=serializers.CharField(max_length=200))
 
 
-class NarrationSubjectSerializer2(serializers.Serializer):
-    subjects = serializers.CharField(max_length=200)
-
+#########################################################################################################
 
 class ContentSummaryTreeSerializer(serializers.ModelSerializer):
+    quran_verse = serializers.IntegerField(write_only=True, required=False)
+
     class Meta:
         model = ContentSummaryTree
-        fields = ['alphabet', 'subject_1', 'subject_2', 'expression', 'summary']
+        fields = ['id', 'alphabet', 'subject_1', 'subject_2', 'expression', 'summary', 'narration', 'quran_verse']
+        # fields = ['alphabet', 'subject_1', 'subject_2', 'expression', 'summary', 'verse']
+        extra_kwargs = {'narration': {'required': False, 'write_only': True}}
+
+    def create(self, validated_data):
+        quran_verse_no = validated_data.pop('quran_verse')
+        content_summary_tree = ContentSummaryTree.objects.create(**validated_data)
+        if quran_verse_no:
+            try:
+                quran_verse = QuranVerse.objects.get(id=quran_verse_no)
+                NarrationSubjectVerse.objects.create(quran_verse=quran_verse, content_summary_tree=content_summary_tree)
+            except:
+                pass
+        return content_summary_tree
+
+    def update(self, instance, validated_data):
+        quran_verse_no = validated_data.pop('quran_verse')
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if quran_verse_no:
+            try:
+                quran_verse = QuranVerse.objects.get(id=quran_verse_no)
+                narration_subject_verse = NarrationSubjectVerse.objects.get(content_summary_tree=instance)
+                narration_subject_verse.quran_verse = quran_verse
+                narration_subject_verse.save()
+            except :
+                pass
+        return instance
+
+
+
+class NarrationSubjectVerseSerializer(serializers.ModelSerializer):
+    quran_verse = QuranVerseSerializer()
+
+    class Meta:
+        model = NarrationSubjectVerse
+        fields = ['quran_verse']
+
+
+class ContentSummaryTreeWithVersesSerializer(serializers.ModelSerializer):
+    verse = QuranVerseSerializer(source='verse.quran_verse', read_only=True)
+    subject = serializers.CharField(max_length=200, source='subject_1')
+    sub_subject = serializers.CharField(max_length=200, source='subject_2')
+
+    class Meta:
+        model = ContentSummaryTree
+        fields = ['id', 'alphabet', 'subject', 'sub_subject', 'expression', 'summary', 'verse']
+
+
+class NarrationSubjectVersePostSerializer(serializers.Serializer):
+    content_summary_tree = ContentSummaryTreeSerializer()
+    quran_verse = serializers.IntegerField(required=False)
+
+
+class ImamRelatedSerializer(serializers.RelatedField):
+    def to_representation(self, value):
+        return {
+            'id': value.id,
+            'name': value.name,
+        }
+
+    def to_internal_value(self, data):
+        try:
+            return Imam.objects.get(id=data)
+        except Imam.DoesNotExist:
+            raise serializers.ValidationError('The Imam does not exist')
+
+
+class BookRelatedSerializer(serializers.RelatedField):
+    def to_representation(self, value):
+        return {
+            'id': value.id,
+            'name': value.name,
+        }
+
+    def to_internal_value(self, data):
+        try:
+            return Book.objects.get(id=data)
+        except Book.DoesNotExist:
+            raise serializers.ValidationError('The book does not exist')
+
+
+#########################################################################################################
+############################################ Narration ##################################################
+
+class NarrationUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Narration
+        fields = '__all__'
+
+
+class NarrationRetrieveSerializer(serializers.ModelSerializer):
+    footnotes = FootNoteSerializer(many=True, read_only=True)
+    subjects = NarrationSubjectModelSerializer(many=True, read_only=True)
+    content_summary_tree = ContentSummaryTreeWithVersesSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Narration
+        fields = '__all__'
+        depth = 2
 
 
 class NarrationSerializer(serializers.ModelSerializer):
-    imam = ImamSerializer(read_only=True)
-    book = BookSerializer(read_only=True)
-    imam_id = serializers.IntegerField(write_only=True)
-    book_id = serializers.IntegerField(write_only=True)
-
-    footnote = FootNoteSerializer(many=True, read_only=True)
+    imam = ImamRelatedSerializer(queryset=Imam.objects.all())
+    book = BookRelatedSerializer(queryset=Book.objects.all())
+    footnotes = FootNoteSerializer(many=True, required=False)
+    subjects = NarrationSubjectRelatedSerializer(many=True, required=False)
+    summary_tree = NarrationSubjectVersePostSerializer(many=True, required=False, write_only=True)
 
     class Meta:
         model = Narration
         fields = '__all__'
 
     def create(self, validated_data):
-        imam_id = validated_data.pop('imam_id')
-        book_id = validated_data.pop('book_id')
+        footnotes = validated_data.pop('footnotes') if 'footnotes' in validated_data else []
+        subjects = validated_data.pop('subjects') if 'subjects' in validated_data else []
+        summary_tree = validated_data.pop('summary_tree') if 'summary_tree' in validated_data else []
 
-        # footnote_data = validated_data.pop('footnote', [])
-        # content_summary_tree_data = validated_data.pop('content_summary_tree', [])
-        # subjects_data = validated_data.pop('subjects', [])
+        narration = Narration.objects.create(**validated_data)
+        for footnote in footnotes:
+            NarrationFootnote.objects.create(narration=narration, **footnote)
 
-        try:
-            imam = Imam.objects.get(pk=imam_id)
-        except Imam.DoesNotExist:
-            raise serializers.ValidationError('The imam_id does not exist')
+        for subject in subjects:
+            NarrationSubject.objects.create(narration=narration, **subject)
 
-        try:
-            book = Book.objects.get(pk=book_id)
-        except Book.DoesNotExist:
-            raise serializers.ValidationError('The book_id does not exist')
-
-        narration = Narration.objects.create(imam=imam, book=book, **validated_data)
-
-        # for footnote in footnote_data:
-        #     expression = footnote.get('expression')
-        #     explanation = footnote.get('explanation')
-        #     NarrationFootnote.objects.create(narration=narration, expression=expression, explanation=explanation)
-        #
-        # for subject in subjects_data:
-        #     NarrationSubject.objects.create(narration=narration, subject=subject)
-        #
-        # for tree in content_summary_tree_data:
-        #     alphabet = tree.get('alphabet')
-        #     subject_1 = tree.get('subject_1')
-        #     subject_2 = tree.get('subject_2')
-        #     expression = tree.get('expression')
-        #     summary = tree.get('summary')
-        #     ContentSummaryTree.objects.create(narration=narration, alphabet=alphabet, subject_1=subject_1,
-        #                                       subject_2=subject_2, expression=expression, summary=summary)
+        for a in summary_tree:
+            content_summary_tree = a.get('content_summary_tree')
+            content_summary_tree = ContentSummaryTree.objects.create(**content_summary_tree, narration=narration)
+            try:
+                quran_verse_id = a.get('quran_verse')
+                if quran_verse_id:
+                    quran_verse = QuranVerse.objects.get(id=quran_verse_id)
+                    NarrationSubjectVerse.objects.create(quran_verse=quran_verse,
+                                                         content_summary_tree=content_summary_tree)
+                    NarrationVerse.objects.create(narration=narration, quran_verse=quran_verse)
+            except:
+                pass
 
         return narration
+
+
+#########################################################################################################
+
+
+class NarrationFootnoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NarrationFootnote
+        fields = '__all__'
 
 
 # class NarrationDetailSerializer(serializers.ModelSerializer):
@@ -162,18 +291,6 @@ class MyUserRegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
-
-
-class QuranSurahSerializer(serializers.Serializer):
-    surah_no = serializers.IntegerField()
-    surah_name = serializers.CharField(max_length=100)
-    no_of_verses = serializers.IntegerField()
-
-
-class QuranVerseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = QuranVerse
-        fields = ['id', 'surah_no', 'surah_name', 'verse_no', 'verse_content']
 
 #
 # class BookSerializer1(serializers.ModelSerializer):

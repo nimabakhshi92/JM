@@ -14,6 +14,10 @@ router.register('subject', viewsets.SubjectVS, basename='subjects')
 router.register('quran_surah', viewsets.QuranSurahVS, basename='quran_surah')
 router.register('quran', viewsets.QuranVS, basename='quran')
 router.register('narration', viewsets.NarrationVS, basename='narration')
+router.register('footnote', viewsets.NarrationFootnoteVS)
+router.register('summary_tree', viewsets.ContentSummaryTreeVS)
+
+
 # router.register('narration1', viewsets.Narration1VS, basename='narration1')
 # router.register('table_of_contents', viewsets.ContentSummaryTree1VS, basename='table_of_contents')
 

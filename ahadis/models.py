@@ -54,7 +54,7 @@ class Narration(models.Model):
 
 
 class NarrationSubject(models.Model):
-    narration = models.ForeignKey(Narration, models.CASCADE)
+    narration = models.ForeignKey(Narration, models.CASCADE, related_name='subjects')
     subject = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -67,7 +67,7 @@ class NarrationSubject(models.Model):
 
 
 class NarrationFootnote(models.Model):
-    narration = models.ForeignKey(Narration, models.CASCADE, related_name='footnote')
+    narration = models.ForeignKey(Narration, models.CASCADE, related_name='footnotes')
     expression = models.TextField()
     explanation = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -115,14 +115,17 @@ class ContentSummaryTree(models.Model):
 
 
 class NarrationSubjectVerse(models.Model):
-    content_summary_tree = models.ForeignKey(ContentSummaryTree, models.CASCADE)
+    content_summary_tree = models.OneToOneField(ContentSummaryTree, models.CASCADE, related_name='verse')
     quran_verse = models.ForeignKey(QuranVerse, models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
+
+
     class Meta:
         db_table = 'NarrationSubjectVerse'
         unique_together = (('content_summary_tree', 'quran_verse'),)
+
 
 
 class NarrationVerse(models.Model):
@@ -134,7 +137,6 @@ class NarrationVerse(models.Model):
     class Meta:
         db_table = 'NarrationVerse'
         unique_together = (('narration', 'quran_verse'),)
-
 
 # //////////////////////////////// APIs:
 #
