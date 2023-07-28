@@ -47,7 +47,7 @@ const changeVerseAvailablity = function(i){
     verse_no.disabled = !isDisabled
 }
 const fillFootnotesAutomatically = ()=>{
-    for(let i=1; i<100; i++){
+    for(let i=1; i<1000; i++){
         let e = document.getElementById('Expression'+i)
         if(e){
             e.value = ''
@@ -106,7 +106,7 @@ allInputs.forEach((input)=>{
 
 })
 
-for(let i=1; i<100; i++){
+for(let i=1; i<1000; i++){
     document.getElementById('surah_name'+i).addEventListener('change', ()=>selectSurah(i))
     document.getElementById('verse_no'+i).addEventListener('change', ()=>setVerseContent(i))
     document.getElementById('isVerse'+i).addEventListener('change', ()=>changeVerseAvailablity(i))

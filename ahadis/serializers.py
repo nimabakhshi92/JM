@@ -103,10 +103,9 @@ class ContentSummaryTreeSerializer(serializers.ModelSerializer):
                 narration_subject_verse = NarrationSubjectVerse.objects.get(content_summary_tree=instance)
                 narration_subject_verse.quran_verse = quran_verse
                 narration_subject_verse.save()
-            except :
+            except:
                 pass
         return instance
-
 
 
 class NarrationSubjectVerseSerializer(serializers.ModelSerializer):

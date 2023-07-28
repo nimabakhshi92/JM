@@ -42,9 +42,9 @@ def save_narration_page(request):
             surah_names.append((verse['surah_name']))
     return render(request, 'ahadis/save_hadis.html',
                   {'books': books, 'masoumin': imams,
-                   'summaries_counter': range(1, 71), 'subjects_counter': range(1, 31),
-                   'summaries_ayat_counter': range(1, 71), 'summaries_containing_ayat_counter': range(1, 36),
-                   'related_explanation_counter': range(1, 71),
+                   'summaries_counter': range(1, 710), 'subjects_counter': range(1, 131),
+                   'summaries_ayat_counter': range(1, 710), 'summaries_containing_ayat_counter': range(1, 36),
+                   'related_explanation_counter': range(1, 710),
                    'quran': {'quran': quran_verse},
                    'surah_names': surah_names,
                    })
@@ -128,7 +128,7 @@ def save_narration(request):
     narration.imam = imam
     narration.save()
 
-    subjects = [request.POST[f'HadisSubject{i}'] for i in range(1, 31)]
+    subjects = [request.POST[f'HadisSubject{i}'] for i in range(1, 131)]
     for subject in subjects:
         if subject:
             narration_subject = NarrationSubject(subject=subject)
@@ -140,7 +140,7 @@ def save_narration(request):
             'expression': request.POST[f'Expression{i}'],
             'explanation': request.POST[f'Explanation{i}']
         }
-        for i in range(1, 71)
+        for i in range(1, 710)
     ]
     for expression_explanation in related_explanation:
         expression = expression_explanation['expression']
@@ -167,7 +167,7 @@ def save_narration(request):
          'is_verse': request.POST.get(f'isVerse{i}'),
          'surah_name': request.POST.get(f'surah_name{i}'),
          'verse_no': request.POST.get(f'verse_no{i}'),
-         } for i in range(1, 71)
+         } for i in range(1, 710)
     ]
 
     for item in summaries_in_fehrest:

@@ -6,7 +6,7 @@ function showMoreBoxes1(){
     var elements1 = document.querySelectorAll("#FehrestSummaryObject20~.FehrestSummaryObject");
     var elements4 = document.querySelectorAll("#RelatedExplanationObject20 ~ .FehrestSummaryObject");
     for (let i = 0; i < elements1.length; i++){
-        if (i<20){
+        if (i<80){
             elements1[i].style.display = "block";
             elements4[i].style.display = "block";
             }
@@ -15,9 +15,9 @@ function showMoreBoxes1(){
 function showMoreBoxes2(){
     var obj = document.getElementById("MoreSummariesBoxes2");
     obj.style.display="none";
-    var elements1 = document.querySelectorAll("#FehrestSummaryObject40 ~ .FehrestSummaryObject");
-    var elements4 = document.querySelectorAll("#RelatedExplanationObject40 ~ .FehrestSummaryObject");
-    for (let i = 0; i < 30; i++){
+    var elements1 = document.querySelectorAll("#FehrestSummaryObject100 ~ .FehrestSummaryObject");
+    var elements4 = document.querySelectorAll("#RelatedExplanationObject100 ~ .FehrestSummaryObject");
+    for (let i = 0; i < 700; i++){
         elements1[i].style.display = "block";
         elements4[i].style.display = "block";
     }

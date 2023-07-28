@@ -71,7 +71,7 @@ class MyTokenRefreshView(TokenRefreshView):
 
 
 class TableOfContentsView(APIView):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         queryset = ContentSummaryTree.objects.values(
@@ -130,7 +130,7 @@ class TableOfContentsView(APIView):
 
 
 class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -156,19 +156,19 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
 
 class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
              viewsets.GenericViewSet):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     serializer_class = BookSerializer
     queryset = Book.objects.all()
 
 
 class ImamVS(mixins.ListModelMixin, viewsets.GenericViewSet):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     serializer_class = ImamSerializer
     queryset = Imam.objects.all()
 
 
 class SubjectVS(BaseListCreateUpdateDestroyVS):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     serializer_class = NarrationSubjectModelSerializer
     queryset = NarrationSubject.objects.all()
 
@@ -179,13 +179,13 @@ class SubjectVS(BaseListCreateUpdateDestroyVS):
 
 
 class QuranSurahVS(viewsets.GenericViewSet, mixins.ListModelMixin):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     serializer_class = QuranSurahSerializer
     queryset = QuranVerse.objects.values('surah_no', 'surah_name').annotate(no_of_verses=Max('verse_no'))
 
 
 class QuranVS(viewsets.GenericViewSet, mixins.ListModelMixin):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
     serializer_class = QuranVerseSerializer
 
     def get_queryset(self):
@@ -204,13 +204,13 @@ class QuranVS(viewsets.GenericViewSet, mixins.ListModelMixin):
 class NarrationFootnoteVS(BaseCreateUpdateDestroyVS):
     queryset = NarrationFootnote.objects.all()
     serializer_class = NarrationFootnoteSerializer
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
 
 class ContentSummaryTreeVS(BaseCreateUpdateDestroyVS):
     serializer_class = ContentSummaryTreeSerializer
     queryset = ContentSummaryTree.objects.all()
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
 
 

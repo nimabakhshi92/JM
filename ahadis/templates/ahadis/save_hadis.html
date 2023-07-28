@@ -8,7 +8,7 @@
     {% csrf_token %}
     <section class="verse-info">
         <p>
-        اطلاعات شناسنامه ای حدیث
+            اطلاعات شناسنامه ای حدیث
         </p>
         <input class="InputOne" placeholder="نام حدیث" type="text" name="HadisName"/>
         <select id="Masoum" class="InputOne" name="MasoumID">
@@ -17,7 +17,8 @@
             {% endfor %}
         </select>
         <input class="InputOne" placeholder="راویان حدیث" type="text" name="HadisNarrators"/>
-        <input class="InputOne" placeholder="متن حدیث" type="text" name="HadisText" id="HadisText" onchange="fillFootnotesAutomatically()"/>
+        <input class="InputOne" placeholder="متن حدیث" type="text" name="HadisText" id="HadisText"
+               onchange="fillFootnotesAutomatically()"/>
         <select class="InputOne" name="BookID">
             {% for book in books %}
             <option class="InputOne" value="{{book.id}}">{{book.name}}</option>
@@ -29,58 +30,60 @@
     </section>
     <section class="verse-subject">
         <p>
-        موضوعات مرتبط با حدیث
+            موضوعات مرتبط با حدیث
         </p>
         {% for i in subjects_counter %}
         <input class="InputSubject" type="text" name="HadisSubject{{i}}"/>
         {% endfor %}
         {{ quran|json_script:"quran-data" }}
     </section>
-        <section class="FehrestSummaryContainer" id="FehrestSummaryContainer">
+    <section class="FehrestSummaryContainer" id="FehrestSummaryContainer">
 
-            <p id="FehrestSummaryContainerTitle">خلاصه ها و فهرست</p>
-            {% for i in summaries_counter %}
-            <div id="FehrestSummaryObject{{i}}" class="FehrestSummaryObject">
-                {{forloop.counter}}-
-                <a type="button" id="copy{{i}}">copy</a>
-                <input type="text" class="fehrest-alphabet-input" placeholder="حرف الفبا" name="Alphabet{{i}}" id="Alphabet{{i}}"/>
-                <input type="text" class="fehrest-subject-input" placeholder="موضوع" name="Subject{{i}}" id="Subject{{i}}"/>
-                <input type="text" class="fehrest-subject-input" placeholder="موضوع" name="Text1{{i}}" id="Text1{{i}}"/>
-                <input type="text" class="fehrest-input" placeholder="توضیح من" name="Text4{{i}}" id="Text4{{i}}"/>
-                <input type="text" class="fehrest-input" placeholder="خلاصه" name="Text5{{i}}" id="Text5{{i}}"/>
-                <input type="checkbox" name="isVerse{{i}}" id="isVerse{{i}}">
-                <select name="surah_name{{i}}" id="surah_name{{i}}" disabled>
-                    {% for surah_name in surah_names %}
-                    <option value="{{surah_name}}">
-                        {{forloop.counter}}
-                        -
-                        {{surah_name}}
-                    </option>
-                    {% endfor %}
-                </select>
-                <select name="verse_no{{i}}" id="verse_no{{i}}" disabled></select>
-                <input type="text" class="verse_text" placeholder="aye" id="verse_text{{i}}" disabled>
-            </div>
-            {% endfor %}
-        </section>
-
-        <div class="" id="RelatedExplanationContainer">
-            <p id="RelatedExplanationContainerTitle">پاورقی ها</p>
-            {% for i in related_explanation_counter %}
-            <div id="RelatedExplanationObject{{i}}" class="FehrestSummaryObject">
-
-                {{forloop.counter}}-
-                <input type="text" placeholder="عبارت" name="Expression{{i}}" id="Expression{{i}}" class="FehrestSummaryObjectInput"/>
-                <input type="text" placeholder="توضیح" name="Explanation{{i}}" class="FehrestSummaryObjectInput"/>
-            </div>
-            {% endfor %}
+        <p id="FehrestSummaryContainerTitle">خلاصه ها و فهرست</p>
+        {% for i in summaries_counter %}
+        <div id="FehrestSummaryObject{{i}}" class="FehrestSummaryObject">
+            {{forloop.counter}}-
+            <a type="button" id="copy{{i}}">copy</a>
+            <input type="text" class="fehrest-alphabet-input" placeholder="حرف الفبا" name="Alphabet{{i}}"
+                   id="Alphabet{{i}}"/>
+            <input type="text" class="fehrest-subject-input" placeholder="موضوع" name="Subject{{i}}" id="Subject{{i}}"/>
+            <input type="text" class="fehrest-subject-input" placeholder="موضوع" name="Text1{{i}}" id="Text1{{i}}"/>
+            <input type="text" class="fehrest-input" placeholder="توضیح من" name="Text4{{i}}" id="Text4{{i}}"/>
+            <input type="text" class="fehrest-input" placeholder="خلاصه" name="Text5{{i}}" id="Text5{{i}}"/>
+            <input type="checkbox" name="isVerse{{i}}" id="isVerse{{i}}">
+            <select name="surah_name{{i}}" id="surah_name{{i}}" disabled>
+                {% for surah_name in surah_names %}
+                <option value="{{surah_name}}">
+                    {{forloop.counter}}
+                    -
+                    {{surah_name}}
+                </option>
+                {% endfor %}
+            </select>
+            <select name="verse_no{{i}}" id="verse_no{{i}}" disabled></select>
+            <input type="text" class="verse_text" placeholder="aye" id="verse_text{{i}}" disabled>
         </div>
-        <div class="" id="ButtonsBelow">
-            <input type="button" id="MoreSummariesBoxes1" value="نمایش بیشتر برای خلاصه ها" onclick="showMoreBoxes1()">
-            <button id="SubmitButton" form="SaveAhadis" onclick="">ذخیره</button>
-            <input type="button" id="CheckForHadisRepetition" value="بررسی تکراری بودن حدیث" onclick="showRepeatBox()">
-            <input type="button" id="MoreSummariesBoxes2" value="نمایش بیشتر برای خلاصه ها" onclick="showMoreBoxes2()">
+        {% endfor %}
+    </section>
+
+    <div class="" id="RelatedExplanationContainer">
+        <p id="RelatedExplanationContainerTitle">پاورقی ها</p>
+        {% for i in related_explanation_counter %}
+        <div id="RelatedExplanationObject{{i}}" class="FehrestSummaryObject">
+
+            {{forloop.counter}}-
+            <input type="text" placeholder="عبارت" name="Expression{{i}}" id="Expression{{i}}"
+                   class="FehrestSummaryObjectInput"/>
+            <input type="text" placeholder="توضیح" name="Explanation{{i}}" class="FehrestSummaryObjectInput"/>
         </div>
+        {% endfor %}
+    </div>
+    <div class="" id="ButtonsBelow">
+        <input type="button" id="MoreSummariesBoxes1" value="نمایش بیشتر برای خلاصه ها" onclick="showMoreBoxes1()">
+        <input type="button" id="MoreSummariesBoxes2" value="نمایش بیشتر برای خلاصه ها" onclick="showMoreBoxes2()">
+        <input type="button" id="CheckForHadisRepetition" value="بررسی تکراری بودن حدیث" onclick="showRepeatBox()">
+        <button id="SubmitButton" form="SaveAhadis" onclick="">ذخیره</button>
+    </div>
 </form>
 <div id="RepeatBoxDiv">
     <form id="RepeatBoxForm" action="{% url 'ahadis:check_hadis_repetition' %}" method="post">
