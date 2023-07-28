@@ -84,7 +84,7 @@ DATABASES = {
     # },
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'JM',
+        'NAME': 'JMStaging',
         'USER': 'root',
         'PASSWORD': 'newpassword',
         'HOST': '127.0.0.1',
