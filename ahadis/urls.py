@@ -50,6 +50,7 @@ urlpatterns = [
 
     path('api/table_of_contents/', viewsets.TableOfContentsView.as_view(), name='table_of_contents'),
     # path('api/narrations_list/', viewsets.NarrationVS.as_view(), name='narrations_list'),
-    path('api/', include(router.urls) )
+    path('api/', include(router.urls) ),
+    path('test/', viewsets.FilterOptionsVS.as_view(), name='test')
 
 ]

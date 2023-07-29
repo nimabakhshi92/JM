@@ -120,12 +120,9 @@ class NarrationSubjectVerse(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
-
-
     class Meta:
         db_table = 'NarrationSubjectVerse'
         unique_together = (('content_summary_tree', 'quran_verse'),)
-
 
 
 class NarrationVerse(models.Model):

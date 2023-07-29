@@ -10,10 +10,11 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import mixins, viewsets
 from django.db.models import Max
+from .pagination import *
 
 
 class BaseCreateUpdateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
-                                    mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+                                mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     pass
 
 
@@ -131,6 +132,8 @@ class TableOfContentsView(APIView):
 
 class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
     permission_classes = [IsAuthenticated]
+    pagination_class = NarrationPagination
+
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -207,10 +210,19 @@ class NarrationFootnoteVS(BaseCreateUpdateDestroyVS):
     permission_classes = [IsAuthenticated]
 
 
-class ContentSummaryTreeVS(BaseCreateUpdateDestroyVS):
+class ContentSummaryTreeVS(BaseListCreateUpdateDestroyVS):
     serializer_class = ContentSummaryTreeSerializer
     queryset = ContentSummaryTree.objects.all()
     permission_classes = [IsAuthenticated]
 
 
-
+class FilterOptionsVS(generics.ListAPIView):
+    serializer_class = FilterOptionsSerializer
+    queryset = Narration.objects.all().values('name',
+                                              'imam__name',
+                                              'content_summary_tree__alphabet',
+                                              'content_summary_tree__subject_1',
+                                              'content_summary_tree__subject_2',
+                                              'content_summary_tree__verse__quran_verse__surah_name',
+                                              'content_summary_tree__verse__quran_verse__verse_no',
+                                              'content_summary_tree__verse__quran_verse__verse_content').distinct()

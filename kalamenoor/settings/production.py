@@ -144,8 +144,12 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=0),
-    "REFRESH_TOKEN_LIFETIME": timedelta(seconds=0),
+    # "ACCESS_TOKEN_LIFETIME": timedelta(seconds=0),
+    # "REFRESH_TOKEN_LIFETIME": timedelta(seconds=0),
+    # "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    # "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=10000),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=10000),
     "ROTATE_REFRESH_TOKENS": True,
     "TOKEN_OBTAIN_SERIALIZER": "ahadis.serializers.MyTokenObtainPairSerializer",
 }
