@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import viewsets
 from .models import *
 from .serializers import *
@@ -11,6 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import mixins, viewsets
 from django.db.models import Max
 from .pagination import *
+from .views import *
 
 
 class BaseCreateUpdateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
@@ -130,10 +133,135 @@ class TableOfContentsView(APIView):
         return Response(serializer.validated_data)
 
 
+class SurahTableOfContentsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = NarrationSubjectVerse.objects.values(
+            'quran_verse__surah_no', 'quran_verse__surah_name', 'quran_verse__verse_no', 'quran_verse__verse_content',
+            'content_summary_tree__subject_2', 'content_summary_tree__expression', 'content_summary_tree__summary',
+        ).distinct().order_by('quran_verse__surah_no', 'quran_verse__verse_no',
+                              'content_summary_tree__subject_2')
+
+        data = {}
+        for item in queryset:
+            surah_no = item['quran_verse__surah_no']
+            surah_name = item['quran_verse__surah_name']
+            verse_no = item['quran_verse__verse_no']
+            verse_content = item['quran_verse__verse_content']
+            sub_subject = item['content_summary_tree__subject_2']
+            expression = item['content_summary_tree__expression']
+            summary = item['content_summary_tree__summary']
+
+            if surah_no not in data:
+                data[surah_no] = {
+                    'surah_no': surah_no,
+                    'surah_name': surah_name,
+                    'verses': []
+                }
+
+            surah_data = data[surah_no]
+            verses_data = next(
+                (sub for sub in surah_data['verses'] if sub['verse_no'] == verse_no),
+                None
+            )
+
+            if verses_data is None:
+                verses_data = {
+                    'verse_no': verse_no,
+                    'verse_content': verse_content,
+                    'sub_subjects': []
+                }
+                surah_data['verses'].append(verses_data)
+
+            sub_subject_data = next(
+                (sub for sub in verses_data['sub_subjects'] if sub['title'] == sub_subject),
+                None
+            )
+
+            if sub_subject_data is None:
+                sub_subject_data = {
+                    'title': sub_subject,
+                    'content': []
+                }
+                verses_data['sub_subjects'].append(sub_subject_data)
+
+            content_data = {
+                'expression': expression,
+                'summary': summary
+            }
+            sub_subject_data['content'].append(content_data)
+
+        serializer = SurahSerializer(data=list(data.values()), many=True)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.validated_data)
+
+
+class VersesTableOfContentsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        queryset = NarrationSubjectVerse.objects.values(
+            'content_summary_tree__alphabet', 'content_summary_tree__subject_1', 'content_summary_tree__subject_2',
+            'content_summary_tree__expression', 'content_summary_tree__summary'
+        ).distinct().order_by('content_summary_tree__alphabet', 'content_summary_tree__subject_1',
+                              'content_summary_tree__subject_2')
+
+        data = {}
+        for item in queryset:
+            alphabet = item['content_summary_tree__alphabet']
+            subject = item['content_summary_tree__subject_1']
+            sub_subject = item['content_summary_tree__subject_2']
+            expression = item['content_summary_tree__expression']
+            summary = item['content_summary_tree__summary']
+
+            if alphabet not in data:
+                data[alphabet] = {
+                    'alphabet': alphabet,
+                    'subjects': []
+                }
+
+            alphabet_data = data[alphabet]
+            subject_data = next(
+                (sub for sub in alphabet_data['subjects'] if sub['title'] == subject),
+                None
+            )
+
+            if subject_data is None:
+                subject_data = {
+                    'title': subject,
+                    'sub_subjects': []
+                }
+                alphabet_data['subjects'].append(subject_data)
+
+            sub_subject_data = next(
+                (sub for sub in subject_data['sub_subjects'] if sub['title'] == sub_subject),
+                None
+            )
+
+            if sub_subject_data is None:
+                sub_subject_data = {
+                    'title': sub_subject,
+                    'content': []
+                }
+                subject_data['sub_subjects'].append(sub_subject_data)
+
+            content_data = {
+                'expression': expression,
+                'summary': summary
+            }
+            sub_subject_data['content'].append(content_data)
+
+        serializer = AlphabetSerializer(data=list(data.values()), many=True)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.validated_data)
+
+
 class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
     permission_classes = [IsAuthenticated]
-    pagination_class = NarrationPagination
-
+    pagination_class = MyPagination
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -147,6 +275,12 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         alphabet = self.request.query_params.get('alphabet', None)
         subject = self.request.query_params.get('subject', None)
         sub_subject = self.request.query_params.get('sub_subject', None)
+        imam_name = self.request.query_params.get('imam_name', None)
+        narration_name = self.request.query_params.get('narration_name', None)
+        surah_name = self.request.query_params.get('surah_name', None)
+        verse_no = self.request.query_params.get('verse_no', None)
+        subjects_search = self.request.query_params.get('subjects_search', None)
+        texts_search = self.request.query_params.get('texts_search', None)
         queryset = Narration.objects.all()
         if alphabet:
             queryset = queryset.filter(content_summary_tree__alphabet=alphabet)
@@ -154,7 +288,30 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
             queryset = queryset.filter(content_summary_tree__subject_1=subject)
         if sub_subject:
             queryset = queryset.filter(content_summary_tree__subject_2=sub_subject)
-        return queryset
+        if imam_name:
+            queryset = queryset.filter(imam__name=imam_name)
+        if narration_name:
+            queryset = queryset.filter(name=narration_name)
+        if surah_name:
+            queryset = queryset.filter(narrationverse__quran_verse__surah_name=surah_name)
+        if verse_no:
+            queryset = queryset.filter(narrationverse__quran_verse__verse_no=verse_no)
+        if subjects_search:
+            for or_subject_list in subjects_search.split(','):
+                queryset = queryset.filter(subjects__subject__in=or_subject_list.split('|'))
+        if texts_search:
+            original_queryset = queryset
+            for or_text_list_str in texts_search.split(','):
+                filtered_queryset = []
+                or_text_list = or_text_list_str.split('|')
+                for item in queryset:
+                    for text in or_text_list:
+                        if remove_arabic_characters(text) in remove_arabic_characters(item.content):
+                            filtered_queryset.append(item)
+                            break
+                queryset = filtered_queryset
+            queryset = original_queryset.filter(id__in=map(lambda x: x.id, queryset))
+        return queryset.distinct()
 
 
 class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
@@ -218,6 +375,7 @@ class ContentSummaryTreeVS(BaseListCreateUpdateDestroyVS):
 
 class FilterOptionsVS(generics.ListAPIView):
     serializer_class = FilterOptionsSerializer
+    permission_classes = [IsAuthenticated]
     queryset = Narration.objects.all().values('name',
                                               'imam__name',
                                               'content_summary_tree__alphabet',

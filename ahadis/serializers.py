@@ -271,9 +271,23 @@ class SubjectSerializer(serializers.Serializer):
     sub_subjects = SubSubjectSerializer(many=True)
 
 
+class VersesSerializer(serializers.Serializer):
+    verse_no = serializers.IntegerField()
+    verse_content = serializers.CharField()
+    sub_subjects = SubSubjectSerializer(many=True)
+
+
 class AlphabetSerializer(serializers.Serializer):
     alphabet = serializers.CharField(max_length=200)
     subjects = SubjectSerializer(many=True)
+
+
+class SurahSerializer(serializers.Serializer):
+    surah_no = serializers.IntegerField()
+    surah_name = serializers.CharField(max_length=200)
+    verses = VersesSerializer(many=True)
+
+
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
