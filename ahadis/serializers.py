@@ -304,7 +304,7 @@ class MyTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         refresh = self.token_class(attrs["refresh"])
-        data['expires_aat'] = datetime.now() + refresh.access_token.lifetime
+        data['expires_at'] = datetime.now() + refresh.access_token.lifetime
 
         return data
 
