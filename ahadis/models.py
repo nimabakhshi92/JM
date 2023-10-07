@@ -68,8 +68,8 @@ class NarrationSubject(models.Model):
 
 class NarrationFootnote(models.Model):
     narration = models.ForeignKey(Narration, models.CASCADE, related_name='footnotes')
-    expression = models.TextField()
-    explanation = models.TextField()
+    expression = models.TextField(default="")
+    explanation = models.TextField(default="")
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
