@@ -98,12 +98,12 @@ class QuranVerse(models.Model):
 class ContentSummaryTree(models.Model):
     narration = models.ForeignKey(Narration, models.CASCADE, related_name='content_summary_tree')
     alphabet = models.CharField(max_length=200)
-    subject_1 = models.CharField(max_length=200)
-    subject_2 = models.CharField(max_length=200)
-    subject_3 = models.CharField(max_length=200)
-    subject_4 = models.CharField(max_length=200)
-    expression = models.TextField()
-    summary = models.TextField()
+    subject_1 = models.CharField(max_length=200, default="")
+    subject_2 = models.CharField(max_length=200, default="")
+    subject_3 = models.CharField(max_length=200, default="")
+    subject_4 = models.CharField(max_length=200, default="")
+    expression = models.TextField(default="")
+    summary = models.TextField(default="")
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
