@@ -98,13 +98,14 @@ class ContentSummaryTreeSerializer(serializers.ModelSerializer):
         instance.save()
 
         if quran_verse_no:
+            quran_verse = QuranVerse.objects.get(id=quran_verse_no)
             try:
-                quran_verse = QuranVerse.objects.get(id=quran_verse_no)
                 narration_subject_verse = NarrationSubjectVerse.objects.get(content_summary_tree=instance)
                 narration_subject_verse.quran_verse = quran_verse
                 narration_subject_verse.save()
             except:
-                pass
+                narration_subject_verse = NarrationSubjectVerse.objects.create(content_summary_tree=instance,
+                                                                            quran_verse=quran_verse)
         return instance
 
 
@@ -286,8 +287,6 @@ class SurahSerializer(serializers.Serializer):
     surah_no = serializers.IntegerField()
     surah_name = serializers.CharField(max_length=200)
     verses = VersesSerializer(many=True)
-
-
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
