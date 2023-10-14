@@ -258,17 +258,17 @@ class NarrationFootnoteSerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 
 class ContentSerializer(serializers.Serializer):
-    expression = serializers.CharField()
-    summary = serializers.CharField()
+    expression = serializers.CharField( allow_blank=True)
+    summary = serializers.CharField(allow_blank=True)
 
 
 class SubSubjectSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=200)
+    title = serializers.CharField(max_length=200,allow_blank=True)
     content = ContentSerializer(many=True)
 
 
 class SubjectSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=200)
+    title = serializers.CharField(max_length=200, allow_blank=True)
     sub_subjects = SubSubjectSerializer(many=True)
 
 
@@ -279,8 +279,8 @@ class VersesSerializer(serializers.Serializer):
 
 
 class AlphabetSerializer(serializers.Serializer):
-    alphabet = serializers.CharField(max_length=200)
-    subjects = SubjectSerializer(many=True)
+    alphabet = serializers.CharField(max_length=200, default='')
+    subjects = SubjectSerializer(many=True, default='')
 
 
 class SurahSerializer(serializers.Serializer):
