@@ -14,7 +14,7 @@ from rest_framework import mixins, viewsets
 from django.db.models import Max
 from .pagination import *
 from .views import *
-
+from rest_framework import filters
 
 class BaseCreateUpdateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                                 mixins.UpdateModelMixin, mixins.DestroyModelMixin):
@@ -79,14 +79,16 @@ class TableOfContentsView(APIView):
 
     def get(self, request):
         queryset = ContentSummaryTree.objects.values(
-            'alphabet', 'subject_1', 'subject_2', 'expression', 'summary'
-        ).distinct().order_by('alphabet', 'subject_1', 'subject_2')
+            'alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'expression', 'summary'
+        ).distinct().order_by('alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4')
 
         data = {}
         for item in queryset:
             alphabet = item['alphabet']
             subject = item['subject_1']
             sub_subject = item['subject_2']
+            subject_3 = item['subject_3']
+            subject_4 = item['subject_4']
             expression = item['expression']
             summary = item['summary']
 
@@ -117,15 +119,39 @@ class TableOfContentsView(APIView):
             if sub_subject_data is None:
                 sub_subject_data = {
                     'title': sub_subject,
-                    'content': []
+                    'subjects_3': []
                 }
                 subject_data['sub_subjects'].append(sub_subject_data)
+
+            subjects_3_data = next(
+                (sub for sub in sub_subject_data['subjects_3'] if sub['title'] == subject_3),
+                None
+            )
+
+            if subjects_3_data is None:
+                subjects_3_data = {
+                    'title': subject_3,
+                    'subjects_4': []
+                }
+                sub_subject_data['subjects_3'].append(subjects_3_data)
+
+            subjects_4_data = next(
+                (sub for sub in subjects_3_data['subjects_4'] if sub['title'] == subject_4),
+                None
+            )
+
+            if subjects_4_data is None:
+                subjects_4_data = {
+                    'title': subject_4,
+                    'content': []
+                }
+                subjects_3_data['subjects_4'].append(subjects_4_data)
 
             content_data = {
                 'expression': expression,
                 'summary': summary
             }
-            sub_subject_data['content'].append(content_data)
+            subjects_4_data['content'].append(content_data)
 
         serializer = AlphabetSerializer(data=list(data.values()), many=True)
         serializer.is_valid(raise_exception=True)
@@ -139,9 +165,11 @@ class SurahTableOfContentsView(APIView):
     def get(self, request):
         queryset = NarrationSubjectVerse.objects.values(
             'quran_verse__surah_no', 'quran_verse__surah_name', 'quran_verse__verse_no', 'quran_verse__verse_content',
+            'content_summary_tree__subject_3', 'content_summary_tree__subject_4',
             'content_summary_tree__subject_2', 'content_summary_tree__expression', 'content_summary_tree__summary',
         ).distinct().order_by('quran_verse__surah_no', 'quran_verse__verse_no',
-                              'content_summary_tree__subject_2')
+                              'content_summary_tree__subject_2', 'content_summary_tree__subject_3',
+                              'content_summary_tree__subject_4')
 
         data = {}
         for item in queryset:
@@ -150,6 +178,8 @@ class SurahTableOfContentsView(APIView):
             verse_no = item['quran_verse__verse_no']
             verse_content = item['quran_verse__verse_content']
             sub_subject = item['content_summary_tree__subject_2']
+            subject_3 = item['content_summary_tree__subject_3']
+            subject_4 = item['content_summary_tree__subject_4']
             expression = item['content_summary_tree__expression']
             summary = item['content_summary_tree__summary']
 
@@ -182,15 +212,39 @@ class SurahTableOfContentsView(APIView):
             if sub_subject_data is None:
                 sub_subject_data = {
                     'title': sub_subject,
-                    'content': []
+                    'subjects_3': []
                 }
                 verses_data['sub_subjects'].append(sub_subject_data)
+
+            subjects_3_data = next(
+                (sub for sub in sub_subject_data['subjects_3'] if sub['title'] == subject_3),
+                None
+            )
+
+            if subjects_3_data is None:
+                subjects_3_data = {
+                    'title': subject_3,
+                    'subjects_4': []
+                }
+                sub_subject_data['subjects_3'].append(subjects_3_data)
+
+            subjects_4_data = next(
+                (sub for sub in subjects_3_data['subjects_4'] if sub['title'] == subject_4),
+                None
+            )
+
+            if subjects_4_data is None:
+                subjects_4_data = {
+                    'title': subject_4,
+                    'content': []
+                }
+                subjects_3_data['subjects_4'].append(subjects_4_data)
 
             content_data = {
                 'expression': expression,
                 'summary': summary
             }
-            sub_subject_data['content'].append(content_data)
+            subjects_4_data['content'].append(content_data)
 
         serializer = SurahSerializer(data=list(data.values()), many=True)
         serializer.is_valid(raise_exception=True)
@@ -204,15 +258,19 @@ class VersesTableOfContentsView(APIView):
     def get(self, request):
         queryset = NarrationSubjectVerse.objects.values(
             'content_summary_tree__alphabet', 'content_summary_tree__subject_1', 'content_summary_tree__subject_2',
+            'content_summary_tree__subject_3', 'content_summary_tree__subject_4',
             'content_summary_tree__expression', 'content_summary_tree__summary'
         ).distinct().order_by('content_summary_tree__alphabet', 'content_summary_tree__subject_1',
-                              'content_summary_tree__subject_2')
+                              'content_summary_tree__subject_2', 'content_summary_tree__subject_3',
+                              'content_summary_tree__subject_4')
 
         data = {}
         for item in queryset:
             alphabet = item['content_summary_tree__alphabet']
             subject = item['content_summary_tree__subject_1']
             sub_subject = item['content_summary_tree__subject_2']
+            subject_3 = item['content_summary_tree__subject_3']
+            subject_4 = item['content_summary_tree__subject_4']
             expression = item['content_summary_tree__expression']
             summary = item['content_summary_tree__summary']
 
@@ -243,15 +301,39 @@ class VersesTableOfContentsView(APIView):
             if sub_subject_data is None:
                 sub_subject_data = {
                     'title': sub_subject,
-                    'content': []
+                    'subjects_3': []
                 }
                 subject_data['sub_subjects'].append(sub_subject_data)
+
+            subjects_3_data = next(
+                (sub for sub in sub_subject_data['subjects_3'] if sub['title'] == subject_3),
+                None
+            )
+
+            if subjects_3_data is None:
+                subjects_3_data = {
+                    'title': subject_3,
+                    'subjects_4': []
+                }
+                sub_subject_data['subjects_3'].append(subjects_3_data)
+
+            subjects_4_data = next(
+                (sub for sub in subjects_3_data['subjects_4'] if sub['title'] == subject_4),
+                None
+            )
+
+            if subjects_4_data is None:
+                subjects_4_data = {
+                    'title': subject_4,
+                    'content': []
+                }
+                subjects_3_data['subjects_4'].append(subjects_4_data)
 
             content_data = {
                 'expression': expression,
                 'summary': summary
             }
-            sub_subject_data['content'].append(content_data)
+            subjects_4_data['content'].append(content_data)
 
         serializer = AlphabetSerializer(data=list(data.values()), many=True)
         serializer.is_valid(raise_exception=True)
@@ -311,7 +393,7 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
                             break
                 queryset = filtered_queryset
             queryset = original_queryset.filter(id__in=map(lambda x: x.id, queryset))
-        return queryset.distinct()
+        return queryset.distinct().order_by('-modified')
 
 
 class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
@@ -381,6 +463,8 @@ class FilterOptionsVS(generics.ListAPIView):
                                               'content_summary_tree__alphabet',
                                               'content_summary_tree__subject_1',
                                               'content_summary_tree__subject_2',
+                                              'content_summary_tree__subject_3',
+                                              'content_summary_tree__subject_4',
                                               'content_summary_tree__verse__quran_verse__surah_name',
                                               'content_summary_tree__verse__quran_verse__verse_no',
                                               'content_summary_tree__verse__quran_verse__verse_content').distinct()

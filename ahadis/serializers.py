@@ -75,8 +75,8 @@ class ContentSummaryTreeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContentSummaryTree
-        fields = ['id', 'alphabet', 'subject_1', 'subject_2', 'expression', 'summary', 'narration', 'quran_verse']
-        # fields = ['alphabet', 'subject_1', 'subject_2', 'expression', 'summary', 'verse']
+        fields = ['id', 'alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'expression', 'summary',
+                  'narration', 'quran_verse']
         extra_kwargs = {'narration': {'required': False, 'write_only': True}}
 
     def create(self, validated_data):
@@ -105,7 +105,7 @@ class ContentSummaryTreeSerializer(serializers.ModelSerializer):
                 narration_subject_verse.save()
             except:
                 narration_subject_verse = NarrationSubjectVerse.objects.create(content_summary_tree=instance,
-                                                                            quran_verse=quran_verse)
+                                                                               quran_verse=quran_verse)
         return instance
 
 
@@ -124,7 +124,8 @@ class ContentSummaryTreeWithVersesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContentSummaryTree
-        fields = ['id', 'alphabet', 'subject', 'sub_subject', 'expression', 'summary', 'verse']
+        fields = ['id', 'alphabet', 'subject', 'sub_subject', 'subject_3', 'subject_4', 'expression', 'summary',
+                  'verse']
 
 
 class NarrationSubjectVersePostSerializer(serializers.Serializer):
@@ -227,6 +228,8 @@ class FilterOptionsSerializer(serializers.ModelSerializer):
     alphabet = serializers.CharField(max_length=200, source='content_summary_tree__alphabet')
     subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_1')
     sub_subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_2')
+    subject_3 = serializers.CharField(max_length=200, source='content_summary_tree__subject_3')
+    subject_4 = serializers.CharField(max_length=200, source='content_summary_tree__subject_4')
 
     surah_name = serializers.CharField(max_length=100, source='content_summary_tree__verse__quran_verse__surah_name')
     verse_no = serializers.IntegerField(source='content_summary_tree__verse__quran_verse__verse_no')
@@ -235,7 +238,7 @@ class FilterOptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Narration
         fields = ['narration_name', 'imam_name',
-                  'alphabet', 'subject', 'sub_subject',
+                  'alphabet', 'subject', 'sub_subject', 'subject_3', 'subject_4',
                   'surah_name', 'verse_no', 'verse_content']
 
 
@@ -258,12 +261,27 @@ class NarrationFootnoteSerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 
 class ContentSerializer(serializers.Serializer):
-    expression = serializers.CharField( allow_blank=True)
+    expression = serializers.CharField(allow_blank=True)
     summary = serializers.CharField(allow_blank=True)
 
 
+class Subject4Serializer(serializers.Serializer):
+    title = serializers.CharField(max_length=200, allow_blank=True)
+    content = ContentSerializer(many=True)
+
+
+class Subject3Serializer(serializers.Serializer):
+    title = serializers.CharField(max_length=200, allow_blank=True)
+    subjects_4 = Subject4Serializer(many=True)
+
+
 class SubSubjectSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=200,allow_blank=True)
+    title = serializers.CharField(max_length=200, allow_blank=True)
+    subjects_3 = Subject3Serializer(many=True)
+
+
+class SubSubjectForVerseSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=200, allow_blank=True)
     content = ContentSerializer(many=True)
 
 
