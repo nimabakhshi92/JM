@@ -11,8 +11,8 @@ app = Celery('tasks', broker='redis://localhost:6379/0')
 def setup_periodic_tasks(sender, **kwargs):
     # Executes every Monday morning at 7:30 a.m.
     sender.add_periodic_task(
-        #        crontab(hour=7, minute=30),
-        crontab(minute='*/1'),
+        crontab(hour=6, minute=30),
+        #crontab(minute='*/1'),
         backup_db.s(),
     )
 
