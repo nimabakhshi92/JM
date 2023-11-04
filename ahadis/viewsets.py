@@ -357,6 +357,8 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         alphabet = self.request.query_params.get('alphabet', None)
         subject = self.request.query_params.get('subject', None)
         sub_subject = self.request.query_params.get('sub_subject', None)
+        subject_3 = self.request.query_params.get('subject_3', None)
+        subject_4 = self.request.query_params.get('subject_4', None)
         imam_name = self.request.query_params.get('imam_name', None)
         narration_name = self.request.query_params.get('narration_name', None)
         surah_name = self.request.query_params.get('surah_name', None)
@@ -370,6 +372,10 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
             queryset = queryset.filter(content_summary_tree__subject_1=subject)
         if sub_subject:
             queryset = queryset.filter(content_summary_tree__subject_2=sub_subject)
+        if subject_3:
+            queryset = queryset.filter(content_summary_tree__subject_3=subject_3)
+        if subject_4:
+            queryset = queryset.filter(content_summary_tree__subject_4=subject_4)
         if imam_name:
             queryset = queryset.filter(imam__name=imam_name)
         if narration_name:

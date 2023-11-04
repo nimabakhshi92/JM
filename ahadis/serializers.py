@@ -187,6 +187,7 @@ class NarrationSerializer(serializers.ModelSerializer):
     footnotes = FootNoteSerializer(many=True, required=False)
     subjects = NarrationSubjectRelatedSerializer(many=True, required=False)
     summary_tree = NarrationSubjectVersePostSerializer(many=True, required=False, write_only=True)
+    content_summary_tree = ContentSummaryTreeWithVersesSerializer(many=True, read_only=True)
 
     class Meta:
         model = Narration
