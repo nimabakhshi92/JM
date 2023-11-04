@@ -11,7 +11,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
 
-def upload_basic():
+def upload_basic(file_metadata, filename, mimetype):
     """Insert new file.
     Returns : Id's of the file uploaded
 

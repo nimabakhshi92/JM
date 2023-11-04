@@ -2,7 +2,7 @@ from celery import Celery
 from celery.schedules import crontab
 import datetime
 import subprocess
-from .Gdrive import upload_basic
+from Gdrive import upload_basic
 
 app = Celery('tasks', broker='redis://localhost:6379/0')
 
