@@ -163,7 +163,7 @@ class SurahTableOfContentsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        queryset = NarrationSubjectVerse.objects.values(
+        queryset = NarrationSubjectVerse.objects.exclude(content_summary_tree__alphabet='بیان').values(
             'quran_verse__surah_no', 'quran_verse__surah_name', 'quran_verse__verse_no', 'quran_verse__verse_content',
             'content_summary_tree__subject_3', 'content_summary_tree__subject_4',
             'content_summary_tree__subject_2', 'content_summary_tree__expression', 'content_summary_tree__summary',
