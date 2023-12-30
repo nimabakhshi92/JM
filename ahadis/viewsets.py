@@ -381,9 +381,9 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         if narration_name:
             queryset = queryset.filter(name=narration_name)
         if surah_name:
-            queryset = queryset.filter(narrationverse__quran_verse__surah_name=surah_name)
+            queryset = queryset.filter(content_summary_tree__verse__quran_verse__surah_name=surah_name)
         if verse_no:
-            queryset = queryset.filter(narrationverse__quran_verse__verse_no=verse_no)
+            queryset = queryset.filter(content_summary_tree__verse__quran_verse__verse_no=verse_no)
         if subjects_search:
             for or_subject_list in subjects_search.split(','):
                 queryset = queryset.filter(subjects__subject__in=or_subject_list.split('|'))
