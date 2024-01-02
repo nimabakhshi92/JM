@@ -91,6 +91,8 @@ class TableOfContentsView(APIView):
             subject_4 = item['subject_4']
             expression = item['expression']
             summary = item['summary']
+            if alphabet=='ت' and subject=='توحید':
+                print(sub_subject)
 
             if alphabet not in data:
                 data[alphabet] = {
@@ -367,23 +369,23 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         texts_search = self.request.query_params.get('texts_search', None)
         queryset = Narration.objects.all()
         if alphabet:
-            queryset = queryset.filter(content_summary_tree__alphabet=alphabet)
+            queryset = queryset.filter(content_summary_tree__alphabet=alphabet).distinct()
         if subject:
-            queryset = queryset.filter(content_summary_tree__subject_1=subject)
+            queryset = queryset.filter(content_summary_tree__subject_1=subject).distinct()
         if sub_subject:
-            queryset = queryset.filter(content_summary_tree__subject_2=sub_subject)
+            queryset = queryset.filter(content_summary_tree__subject_2=sub_subject).distinct()
         if subject_3:
-            queryset = queryset.filter(content_summary_tree__subject_3=subject_3)
+            queryset = queryset.filter(content_summary_tree__subject_3=subject_3).distinct()
         if subject_4:
-            queryset = queryset.filter(content_summary_tree__subject_4=subject_4)
+            queryset = queryset.filter(content_summary_tree__subject_4=subject_4).distinct()
         if imam_name:
             queryset = queryset.filter(imam__name=imam_name)
         if narration_name:
             queryset = queryset.filter(name=narration_name)
         if surah_name:
-            queryset = queryset.filter(content_summary_tree__verse__quran_verse__surah_name=surah_name)
+            queryset = queryset.filter(content_summary_tree__verse__quran_verse__surah_name=surah_name).distinct()
         if verse_no:
-            queryset = queryset.filter(content_summary_tree__verse__quran_verse__verse_no=verse_no)
+            queryset = queryset.filter(content_summary_tree__verse__quran_verse__verse_no=verse_no).distinct()
         if subjects_search:
             for or_subject_list in subjects_search.split(','):
                 queryset = queryset.filter(subjects__subject__in=or_subject_list.split('|'))
