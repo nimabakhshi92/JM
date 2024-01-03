@@ -77,7 +77,14 @@ class ContentSummaryTreeSerializer(serializers.ModelSerializer):
         model = ContentSummaryTree
         fields = ['id', 'alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'expression', 'summary',
                   'narration', 'quran_verse']
-        extra_kwargs = {'narration': {'required': False, 'write_only': True}}
+        extra_kwargs = {'narration': {'required': False, 'write_only': True},
+                        'subject_1': {'required': False},
+                        'subject_2': {'required': False},
+                        'subject_3': {'required': False},
+                        'subject_4': {'required': False},
+                        'expression': {'required': False},
+                        'summary': {'required': False},
+                        }
 
     def create(self, validated_data):
         quran_verse_no = validated_data.pop('quran_verse')
@@ -267,17 +274,17 @@ class ContentSerializer(serializers.Serializer):
 
 
 class Subject4Serializer(serializers.Serializer):
-    title = serializers.CharField(max_length=200, allow_blank=True,trim_whitespace=False)
+    title = serializers.CharField(max_length=200, allow_blank=True, trim_whitespace=False)
     content = ContentSerializer(many=True)
 
 
 class Subject3Serializer(serializers.Serializer):
-    title = serializers.CharField(max_length=200, allow_blank=True,trim_whitespace=False)
+    title = serializers.CharField(max_length=200, allow_blank=True, trim_whitespace=False)
     subjects_4 = Subject4Serializer(many=True)
 
 
 class SubSubjectSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=200, allow_blank=True,trim_whitespace=False)
+    title = serializers.CharField(max_length=200, allow_blank=True, trim_whitespace=False)
     subjects_3 = Subject3Serializer(many=True)
 
 
@@ -287,7 +294,7 @@ class SubSubjectForVerseSerializer(serializers.Serializer):
 
 
 class SubjectSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=200, allow_blank=True,trim_whitespace=False)
+    title = serializers.CharField(max_length=200, allow_blank=True, trim_whitespace=False)
     sub_subjects = SubSubjectSerializer(many=True)
 
 
@@ -298,7 +305,7 @@ class VersesSerializer(serializers.Serializer):
 
 
 class AlphabetSerializer(serializers.Serializer):
-    alphabet = serializers.CharField(max_length=200, default='',trim_whitespace=False)
+    alphabet = serializers.CharField(max_length=200, default='', trim_whitespace=False)
     subjects = SubjectSerializer(many=True, default='')
 
 
