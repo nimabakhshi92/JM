@@ -516,8 +516,8 @@ def get_ayat_fehrest_serial(**kwargs):
 
 
 def remove_arabic_characters(string):
-    to_get_replaced_characters = 'آةيؤإأۀ'
-    replacers = 'اهیوااه'
+    to_get_replaced_characters = 'يكآةيؤإأۀ'
+    replacers = 'یکاهیوااه'
 
     saken_dar = 'بْنُ'
     saken = saken_dar[1]

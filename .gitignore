@@ -1,2 +1,3 @@
 *.pyc
 sqlbackup
+ahadis/__pycache__
