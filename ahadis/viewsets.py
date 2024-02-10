@@ -405,7 +405,7 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
 
         sort_by = self.request.query_params.get('sort_by', 'modified')
         sort_type = self.request.query_params.get('sort_type', None)
-        sort_type = '-' if sort_type == 'desc' else ''
+        sort_type = '' if sort_type == 'asc' else '-'
 
         return queryset.distinct().order_by(f'{sort_type}{sort_by}')
 
