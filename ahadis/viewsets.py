@@ -402,7 +402,12 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
                             break
                 queryset = filtered_queryset
             queryset = original_queryset.filter(id__in=map(lambda x: x.id, queryset))
-        return queryset.distinct().order_by('-modified')
+
+        sort_by = self.request.query_params.get('sort_by', 'modified')
+        sort_type = self.request.query_params.get('sort_type', None)
+        sort_type = '-' if sort_type == 'desc' else ''
+
+        return queryset.distinct().order_by(f'{sort_type}{sort_by}')
 
 
 class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
@@ -512,7 +517,7 @@ class SimilarNarrations(APIView):
             reverse_intersection = np.array(reverse_intersection)
             reverse_intersection_percent = sum(reverse_intersection == 1) / sum(reverse_intersection != -1) * 100
 
-            if intersection_percent > 70 or reverse_intersection_percent > 70:
+            if intersection_percent > 70 or reverse_intersection_percent > 35:
                 similar_narrations.append(narration)
         queryset = original_queryset.filter(id__in=map(lambda x: x.id, similar_narrations))
         queryset.distinct().order_by('-modified')
