@@ -507,7 +507,12 @@ class SimilarNarrations(APIView):
             intersection = [word_is_in_splited_text(word, splited_narration) for word in text_words]
             intersection = np.array(intersection)
             intersection_percent = sum(intersection == 1) / sum(intersection != -1) * 100
-            if intersection_percent > 70:
+
+            reverse_intersection = [word_is_in_splited_text(word, text_words) for word in splited_narration]
+            reverse_intersection = np.array(reverse_intersection)
+            reverse_intersection_percent = sum(reverse_intersection == 1) / sum(reverse_intersection != -1) * 100
+
+            if intersection_percent > 70 or reverse_intersection_percent > 70:
                 similar_narrations.append(narration)
         queryset = original_queryset.filter(id__in=map(lambda x: x.id, similar_narrations))
         queryset.distinct().order_by('-modified')
