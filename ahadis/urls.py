@@ -56,6 +56,6 @@ urlpatterns = [
 
     # path('api/narrations_list/', viewsets.NarrationVS.as_view(), name='narrations_list'),
     path('api/', include(router.urls)),
-    path('test/', viewsets.FilterOptionsVS.as_view(), name='test')
+    path('api/filter_options/', viewsets.FilterOptionsVS.as_view(), name='test')
 
 ]
