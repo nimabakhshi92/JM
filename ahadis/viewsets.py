@@ -16,6 +16,7 @@ from .pagination import *
 from .views import *
 from rest_framework import filters
 
+
 class BaseCreateUpdateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                                 mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     pass
@@ -91,7 +92,7 @@ class TableOfContentsView(APIView):
             subject_4 = item['subject_4']
             expression = item['expression']
             summary = item['summary']
-            if alphabet=='ت' and subject=='توحید':
+            if alphabet == 'ت' and subject == 'توحید':
                 print(sub_subject)
 
             if alphabet not in data:
@@ -476,3 +477,40 @@ class FilterOptionsVS(generics.ListAPIView):
                                               'content_summary_tree__verse__quran_verse__surah_name',
                                               'content_summary_tree__verse__quran_verse__verse_no',
                                               'content_summary_tree__verse__quran_verse__verse_content').distinct()
+
+
+def word_is_in_splited_text(word, splited):
+    if word == ' ':
+        return -1
+    elif word in splited:
+        return 1
+    else:
+        return 0
+
+
+class SimilarNarrations(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        text = request.data.get('text')
+        if not text:
+            return Response(data={'message': 'Narration text must be nonempty'}, status=400)
+
+        text_words = list(filter(lambda x: len(x) > 1, text.split(' ')))
+        queryset = Narration.objects.all()
+
+        original_queryset = queryset
+        similar_narrations = []
+        for narration in queryset:
+            splited_narration = narration.content.split(' ')
+            intersection = [word_is_in_splited_text(word, splited_narration) for word in text_words]
+            intersection = np.array(intersection)
+            intersection_percent = sum(intersection == 1) / sum(intersection != -1) * 100
+            if intersection_percent > 70:
+                similar_narrations.append(narration)
+        queryset = original_queryset.filter(id__in=map(lambda x: x.id, similar_narrations))
+        queryset.distinct().order_by('-modified')
+
+        serializer = NarrationSerializer(queryset, many=True)
+        return Response(serializer.data)
