@@ -103,8 +103,13 @@ class ContentSummaryTreeSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-
-        if quran_verse_no:
+        if quran_verse_no == -1:
+            try:
+                narration_subject_verse = NarrationSubjectVerse.objects.get(content_summary_tree=instance)
+                narration_subject_verse.delete()
+            except:
+                pass
+        elif quran_verse_no:
             quran_verse = QuranVerse.objects.get(id=quran_verse_no)
             try:
                 narration_subject_verse = NarrationSubjectVerse.objects.get(content_summary_tree=instance)
