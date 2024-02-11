@@ -356,65 +356,24 @@ class MyUserRegisterSerializer(serializers.ModelSerializer):
 
         return user
 
-#
-# class BookSerializer1(serializers.ModelSerializer):
-#
-#     class Meta:
-#         model = Book1
-#         fields = '__all__'
-#
-#
-# class ImamSerializer2(serializers.ModelSerializer):
-#     class Meta:
-#         model = Imam1
-#         fields = '__all__'
-#
-#
-# class NarrationSubject1Serializer1(serializers.ModelSerializer):
-#     class Meta:
-#         model = NarrationSubject1
-#         fields = '__all__'
-#
-#
-# class NarrationSerializer1(serializers.ModelSerializer):
-#     imam = ImamSerializer2()
-#     book = BookSerializer1()
-#     subjects = NarrationSubject1Serializer1(many=True, read_only=True)
-#
-#     class Meta:
-#         model = Narration1
-#         fields = ['id', 'name', 'book', 'imam', 'subjects']
-#
-#
-# class ImamSerializer1(serializers.ModelSerializer):
-#     narration = NarrationSerializer1(many=True, read_only=True)
-#
-#     class Meta:
-#         model = Imam1
-#         fields = ['name', 'narration']
-#         # exclude = ('narration', )
-#
-#
-# class ContentSummaryTree1Serializer(serializers.ModelSerializer):
-#     # narration = NarrationSerializer1(many=True, read_only=True)
-#     subjects = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = ContentSummaryTree1
-#         fields = ['alphabet', 'subjects']
-#         # exclude = ('narration', )
-#
-#     def get_subjects(self, obj):
-#         # queryset = ContentSummaryTree1.objects.filter(alphabet=obj.get('alphabet'))
-#         # return [item.subject_1 for item in queryset]
-#         queryset = ContentSummaryTree1.objects.filter(alphabet=obj.get('alphabet')).values_list('subject_1', flat=True)
-#         return list(queryset)
-#
-#
-# class ContentSummaryTree1FlatSerializer(serializers.ModelSerializer):
-#     # narration = NarrationSerializer1(many=True, read_only=True)
-#
-#     class Meta:
-#         model = ContentSummaryTree1
-#         fields = '__all__'
-#         # exclude = ('narration', )
+
+class BookmarkSerializer(serializers.ModelSerializer):
+    narration = NarrationSerializer(read_only=True)
+    narration_id = serializers.IntegerField(write_only=True)
+    user_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = Bookmark
+        # fields = ['id', 'narration', 'narration_id']
+        fields = ['id', 'narration', 'narration_id', 'user_id']
+        extra_kwargs = {'user': {'write_only': True}}
+        # depth = 2
+
+    def create(self, validated_data):
+        user_id = validated_data.pop('user_id')
+        narration_id = validated_data.pop('narration_id')
+        narration = Narration.objects.get(pk=narration_id)
+        user = User.objects.get(id=user_id)
+
+        created = Bookmark.objects.create(user=user, narration=narration)
+        return created

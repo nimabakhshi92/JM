@@ -17,6 +17,11 @@ from .views import *
 from rest_framework import filters
 
 
+class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
+                              mixins.DestroyModelMixin, mixins.ListModelMixin):
+    pass
+
+
 class BaseCreateUpdateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                                 mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     pass
@@ -494,7 +499,7 @@ def word_is_in_splited_text(word, splited):
 
 
 class SimilarNarrations(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
 
@@ -524,3 +529,21 @@ class SimilarNarrations(APIView):
 
         serializer = NarrationSerializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class BookmarkVS(BaseListCreateDestroyVS):
+    permission_classes = [IsAuthenticated]
+    serializer_class = BookmarkSerializer
+
+    def get_queryset(self):
+        queryset = Bookmark.objects.filter(user=self.request.user)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        user = request.user.id
+        data = request.data
+        data['user_id'] = user
+        serialized = BookmarkSerializer(data=data)
+        if serialized.is_valid():
+            serialized.save()
+            return Response(serialized.data, status=status.HTTP_201_CREATED)

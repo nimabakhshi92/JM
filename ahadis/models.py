@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+from django.contrib.auth.models import User
 
 
 # class Narration(models.Model):
@@ -45,6 +47,9 @@ class Narration(models.Model):
     book_narration_no = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+
+    # creator = models.ForeignKey(settings.USER_AUTH_MODEL, on_delete=models.DO_NOTHING)
+    # is_public = models.BooleanField()
 
     class Meta:
         db_table = 'Narration'
@@ -134,6 +139,7 @@ class NarrationVerse(models.Model):
     class Meta:
         db_table = 'NarrationVerse'
         unique_together = (('narration', 'quran_verse'),)
+
 
 # //////////////////////////////// APIs:
 #
@@ -405,3 +411,32 @@ class NarrationVerse(models.Model):
 # #         db_table = 'NarrationVerse1'
 # #         unique_together = (('narration', 'quran_verse'),)
 # #
+
+
+class Bookmark(models.Model):
+    narration = models.ForeignKey(Narration, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Bookmark'
+        unique_together = (('narration', 'user'),)
+
+# class UserProfile(models.Model):
+#     NOT_REGISTERED = 1
+#     REGISTERED = 2
+#     STUDENT = 4
+#     TEACHER = 8
+#     ADMIN = 16
+#     SUPER_ADMIN = 32
+#     ROLE_CHOICES = (
+#         (REGISTERED, 'Registered'),
+#         (STUDENT, 'Student'),
+#         (TEACHER, 'Teacher'),
+#         (ADMIN, 'Admin'),
+#         (SUPER_ADMIN, 'Super Admin'),
+#     )
+#
+#     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=NOT_REGISTERED)
