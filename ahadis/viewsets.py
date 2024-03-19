@@ -84,7 +84,19 @@ class TableOfContentsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        queryset = ContentSummaryTree.objects.values(
+        user_id = int(self.request.query_params.get('user_id', -1))
+        request_user = self.request.user
+        queryset = ContentSummaryTree.objects.all()
+
+        if request_user.id == user_id:
+            queryset = queryset.filter(models.Q(narration__users_narrations__user__id=user_id))
+        elif user_id == -1:
+            queryset = queryset.filter(
+                models.Q(narration__users_narrations__user__id=3) | models.Q(narration__users_narrations__user=None))
+        else:
+            queryset = queryset.filter(models.Q(narration__users_narrations__user__id=-1))
+
+        queryset = queryset.values(
             'alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'expression', 'summary'
         ).distinct().order_by('alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4')
 
@@ -171,7 +183,19 @@ class SurahTableOfContentsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        queryset = NarrationSubjectVerse.objects.filter(content_summary_tree__alphabet='بیان').values(
+        user_id = int(self.request.query_params.get('user_id', -1))
+        request_user = self.request.user
+        queryset = NarrationSubjectVerse.objects.all()
+
+        if request_user.id == user_id:
+            queryset = queryset.filter(models.Q(content_summary_tree__narration__users_narrations__user__id=user_id))
+        elif user_id == -1:
+            queryset = queryset.filter(
+                models.Q(content_summary_tree__narration__users_narrations__user__id=3) | models.Q(content_summary_tree__narration__users_narrations__user=None))
+        else:
+            queryset = queryset.filter(models.Q(content_summary_tree__narration__users_narrations__user__id=-1))
+
+        queryset = queryset.filter(content_summary_tree__alphabet='بیان').values(
             'quran_verse__surah_no', 'quran_verse__surah_name', 'quran_verse__verse_no', 'quran_verse__verse_content',
             'content_summary_tree__subject_3', 'content_summary_tree__subject_4',
             'content_summary_tree__subject_2', 'content_summary_tree__expression', 'content_summary_tree__summary',
@@ -264,7 +288,19 @@ class VersesTableOfContentsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        queryset = NarrationSubjectVerse.objects.values(
+        user_id = int(self.request.query_params.get('user_id', -1))
+        request_user = self.request.user
+        queryset = NarrationSubjectVerse.objects.all()
+
+        if request_user.id == user_id:
+            queryset = queryset.filter(models.Q(content_summary_tree__narration__users_narrations__user__id=user_id))
+        elif user_id == -1:
+            queryset = queryset.filter(
+                models.Q(content_summary_tree__narration__users_narrations__user__id=3) | models.Q(content_summary_tree__narration__users_narrations__user=None))
+        else:
+            queryset = queryset.filter(models.Q(content_summary_tree__narration__users_narrations__user__id=-1))
+
+        queryset = queryset.values(
             'content_summary_tree__alphabet', 'content_summary_tree__subject_1', 'content_summary_tree__subject_2',
             'content_summary_tree__subject_3', 'content_summary_tree__subject_4',
             'content_summary_tree__expression', 'content_summary_tree__summary'
@@ -373,7 +409,17 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         verse_no = self.request.query_params.get('verse_no', None)
         subjects_search = self.request.query_params.get('subjects_search', None)
         texts_search = self.request.query_params.get('texts_search', None)
+        user_id = int(self.request.query_params.get('user_id', -1))
+        request_user = self.request.user
         queryset = Narration.objects.all()
+
+        if self.action == 'retrieve' or self.action == 'list':
+            if request_user.id == user_id:
+                queryset = queryset.filter(models.Q(users_narrations__user__id=user_id))
+            elif user_id == -1:
+                queryset = queryset.filter(models.Q(users_narrations__user__id=3) | models.Q(users_narrations__user=None))
+            else:
+                queryset = queryset.filter(models.Q(users_narrations__user__id=-1))
         if alphabet:
             queryset = queryset.filter(content_summary_tree__alphabet=alphabet).distinct()
         if subject:
@@ -413,6 +459,15 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         sort_type = '' if sort_type == 'asc' else '-'
 
         return queryset.distinct().order_by(f'{sort_type}{sort_by}')
+
+    def create(self, request, *args, **kwargs):
+        user = request.user.id
+        data = request.data
+        data['user_id'] = user
+        serialized = NarrationSerializer(data=data)
+        if serialized.is_valid():
+            serialized.save()
+            return Response(serialized.data, status=status.HTTP_201_CREATED)
 
 
 class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,

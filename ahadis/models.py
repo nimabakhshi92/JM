@@ -423,6 +423,19 @@ class Bookmark(models.Model):
         db_table = 'Bookmark'
         unique_together = (('narration', 'user'),)
 
+
+class UserNarration(models.Model):
+    narration = models.ForeignKey(Narration, on_delete=models.CASCADE, related_name='users_narrations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'UserNarration'
+        unique_together = (('narration', 'user'),)
+
+
+
 # class UserProfile(models.Model):
 #     NOT_REGISTERED = 1
 #     REGISTERED = 2

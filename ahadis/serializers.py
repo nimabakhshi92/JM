@@ -201,6 +201,8 @@ class NarrationSerializer(serializers.ModelSerializer):
     summary_tree = NarrationSubjectVersePostSerializer(many=True, required=False, write_only=True)
     content_summary_tree = ContentSummaryTreeWithVersesSerializer(many=True, read_only=True)
 
+    user_id = serializers.IntegerField(write_only=True)
+
     class Meta:
         model = Narration
         fields = '__all__'
@@ -209,8 +211,13 @@ class NarrationSerializer(serializers.ModelSerializer):
         footnotes = validated_data.pop('footnotes') if 'footnotes' in validated_data else []
         subjects = validated_data.pop('subjects') if 'subjects' in validated_data else []
         summary_tree = validated_data.pop('summary_tree') if 'summary_tree' in validated_data else []
+        user_id = validated_data.pop('user_id')
 
         narration = Narration.objects.create(**validated_data)
+        user = User.objects.get(id=user_id)
+
+        UserNarration.objects.create(narration=narration,user=user)
+
         for footnote in footnotes:
             NarrationFootnote.objects.create(narration=narration, **footnote)
 
@@ -377,3 +384,27 @@ class BookmarkSerializer(serializers.ModelSerializer):
 
         created = Bookmark.objects.create(user=user, narration=narration)
         return created
+
+
+class UserNarrationSerializer(serializers.ModelSerializer):
+    narration = NarrationSerializer(read_only=True)
+    narration_id = serializers.IntegerField(write_only=True)
+    user_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = UserNarration
+        # fields = ['id', 'narration', 'narration_id']
+        fields = ['id', 'narration', 'narration_id', 'user_id']
+        extra_kwargs = {'user': {'write_only': True}}
+        # depth = 2
+
+    def create(self, validated_data):
+        user_id = validated_data.pop('user_id')
+        narration_id = validated_data.pop('narration_id')
+        narration = Narration.objects.get(pk=narration_id)
+        user = User.objects.get(id=user_id)
+
+        created = UserNarration.objects.create(user=user, narration=narration)
+        return created
+
+
