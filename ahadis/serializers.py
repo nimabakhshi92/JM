@@ -215,8 +215,10 @@ class NarrationSerializer(serializers.ModelSerializer):
 
         narration = Narration.objects.create(**validated_data)
         user = User.objects.get(id=user_id)
+        narration.owner = user
+        narration.save()
 
-        UserNarration.objects.create(narration=narration,user=user)
+        # UserNarration.objects.create(narration=narration,user=user)
 
         for footnote in footnotes:
             NarrationFootnote.objects.create(narration=narration, **footnote)
@@ -386,25 +388,25 @@ class BookmarkSerializer(serializers.ModelSerializer):
         return created
 
 
-class UserNarrationSerializer(serializers.ModelSerializer):
-    narration = NarrationSerializer(read_only=True)
-    narration_id = serializers.IntegerField(write_only=True)
-    user_id = serializers.IntegerField(write_only=True)
-
-    class Meta:
-        model = UserNarration
-        # fields = ['id', 'narration', 'narration_id']
-        fields = ['id', 'narration', 'narration_id', 'user_id']
-        extra_kwargs = {'user': {'write_only': True}}
-        # depth = 2
-
-    def create(self, validated_data):
-        user_id = validated_data.pop('user_id')
-        narration_id = validated_data.pop('narration_id')
-        narration = Narration.objects.get(pk=narration_id)
-        user = User.objects.get(id=user_id)
-
-        created = UserNarration.objects.create(user=user, narration=narration)
-        return created
+# class UserNarrationSerializer(serializers.ModelSerializer):
+#     narration = NarrationSerializer(read_only=True)
+#     narration_id = serializers.IntegerField(write_only=True)
+#     user_id = serializers.IntegerField(write_only=True)
+#
+#     class Meta:
+#         model = UserNarration
+#         # fields = ['id', 'narration', 'narration_id']
+#         fields = ['id', 'narration', 'narration_id', 'user_id']
+#         extra_kwargs = {'user': {'write_only': True}}
+#         # depth = 2
+#
+#     def create(self, validated_data):
+#         user_id = validated_data.pop('user_id')
+#         narration_id = validated_data.pop('narration_id')
+#         narration = Narration.objects.get(pk=narration_id)
+#         user = User.objects.get(id=user_id)
+#
+#         created = UserNarration.objects.create(user=user, narration=narration)
+#         return created
 
 

@@ -45,11 +45,9 @@ class Narration(models.Model):
     book_vol_no = models.IntegerField()
     book_page_no = models.IntegerField()
     book_narration_no = models.IntegerField()
+    owner = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
-
-    # creator = models.ForeignKey(settings.USER_AUTH_MODEL, on_delete=models.DO_NOTHING)
-    # is_public = models.BooleanField()
 
     class Meta:
         db_table = 'Narration'
@@ -424,16 +422,16 @@ class Bookmark(models.Model):
         unique_together = (('narration', 'user'),)
 
 
-class UserNarration(models.Model):
-    narration = models.ForeignKey(Narration, on_delete=models.CASCADE, related_name='users_narrations')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'UserNarration'
-        unique_together = (('narration', 'user'),)
-
+# class UserNarration(models.Model):
+#     narration = models.ForeignKey(Narration, on_delete=models.CASCADE, related_name='users_narrations')
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     created = models.DateTimeField(auto_now_add=True)
+#     modified = models.DateTimeField(auto_now=True)
+#
+#     class Meta:
+#         db_table = 'UserNarration'
+#         unique_together = (('narration', 'user'),)
+#
 
 
 # class UserProfile(models.Model):

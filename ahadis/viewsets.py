@@ -6,7 +6,7 @@ from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from .serializers import MyTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -15,6 +15,7 @@ from django.db.models import Max
 from .pagination import *
 from .views import *
 from rest_framework import filters
+from .permissions import *
 
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
@@ -81,7 +82,7 @@ class MyTokenRefreshView(TokenRefreshView):
 
 
 class TableOfContentsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PublicContentPermission]
 
     def get(self, request):
         user_id = int(self.request.query_params.get('user_id', -1))
@@ -89,12 +90,12 @@ class TableOfContentsView(APIView):
         queryset = ContentSummaryTree.objects.all()
 
         if request_user.id == user_id:
-            queryset = queryset.filter(models.Q(narration__users_narrations__user__id=user_id))
+            queryset = queryset.filter(narration__owner__id=user_id)
         elif user_id == -1:
             queryset = queryset.filter(
-                models.Q(narration__users_narrations__user__id=3) | models.Q(narration__users_narrations__user=None))
+                models.Q(narration__owner__is_superuser=True) | models.Q(narration__owner=None))
         else:
-            queryset = queryset.filter(models.Q(narration__users_narrations__user__id=-1))
+            queryset = queryset.none()
 
         queryset = queryset.values(
             'alphabet', 'subject_1', 'subject_2', 'subject_3', 'subject_4', 'expression', 'summary'
@@ -180,7 +181,7 @@ class TableOfContentsView(APIView):
 
 
 class SurahTableOfContentsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PublicContentPermission]
 
     def get(self, request):
         user_id = int(self.request.query_params.get('user_id', -1))
@@ -188,12 +189,13 @@ class SurahTableOfContentsView(APIView):
         queryset = NarrationSubjectVerse.objects.all()
 
         if request_user.id == user_id:
-            queryset = queryset.filter(models.Q(content_summary_tree__narration__users_narrations__user__id=user_id))
+            queryset = queryset.filter(models.Q(content_summary_tree__narration__owner__id=user_id))
         elif user_id == -1:
             queryset = queryset.filter(
-                models.Q(content_summary_tree__narration__users_narrations__user__id=3) | models.Q(content_summary_tree__narration__users_narrations__user=None))
+                models.Q(content_summary_tree__narration__owner__is_superuser=True) | models.Q(
+                    content_summary_tree__narration__owner=None))
         else:
-            queryset = queryset.filter(models.Q(content_summary_tree__narration__users_narrations__user__id=-1))
+            queryset = queryset.none()
 
         queryset = queryset.filter(content_summary_tree__alphabet='بیان').values(
             'quran_verse__surah_no', 'quran_verse__surah_name', 'quran_verse__verse_no', 'quran_verse__verse_content',
@@ -285,7 +287,7 @@ class SurahTableOfContentsView(APIView):
 
 
 class VersesTableOfContentsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PublicContentPermission]
 
     def get(self, request):
         user_id = int(self.request.query_params.get('user_id', -1))
@@ -293,12 +295,13 @@ class VersesTableOfContentsView(APIView):
         queryset = NarrationSubjectVerse.objects.all()
 
         if request_user.id == user_id:
-            queryset = queryset.filter(models.Q(content_summary_tree__narration__users_narrations__user__id=user_id))
+            queryset = queryset.filter(models.Q(content_summary_tree__narration__owner__id=user_id))
         elif user_id == -1:
             queryset = queryset.filter(
-                models.Q(content_summary_tree__narration__users_narrations__user__id=3) | models.Q(content_summary_tree__narration__users_narrations__user=None))
+                models.Q(content_summary_tree__narration__owner__is_superuser = True) | models.Q(
+                    content_summary_tree__narration__owner=None))
         else:
-            queryset = queryset.filter(models.Q(content_summary_tree__narration__users_narrations__user__id=-1))
+            queryset = queryset.none()
 
         queryset = queryset.values(
             'content_summary_tree__alphabet', 'content_summary_tree__subject_1', 'content_summary_tree__subject_2',
@@ -386,7 +389,7 @@ class VersesTableOfContentsView(APIView):
 
 
 class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NarrationPermission]
     pagination_class = MyPagination
 
     def get_serializer_class(self):
@@ -415,11 +418,11 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
 
         if self.action == 'retrieve' or self.action == 'list':
             if request_user.id == user_id:
-                queryset = queryset.filter(models.Q(users_narrations__user__id=user_id))
+                queryset = queryset.filter(models.Q(owner__id=user_id))
             elif user_id == -1:
-                queryset = queryset.filter(models.Q(users_narrations__user__id=3) | models.Q(users_narrations__user=None))
+                queryset = queryset.filter(models.Q(owner__is_superuser=True) | models.Q(owner=None))
             else:
-                queryset = queryset.filter(models.Q(users_narrations__user__id=-1))
+                queryset = queryset.none()
         if alphabet:
             queryset = queryset.filter(content_summary_tree__alphabet=alphabet).distinct()
         if subject:
@@ -472,7 +475,7 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
 
 class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
              viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PublicContentPermission]
     serializer_class = BookSerializer
     queryset = Book.objects.all()
 
@@ -484,7 +487,7 @@ class ImamVS(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class SubjectVS(BaseListCreateUpdateDestroyVS):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PublicContentPermission]
     serializer_class = NarrationSubjectModelSerializer
     queryset = NarrationSubject.objects.all()
 
@@ -501,7 +504,7 @@ class QuranSurahVS(viewsets.GenericViewSet, mixins.ListModelMixin):
 
 
 class QuranVS(viewsets.GenericViewSet, mixins.ListModelMixin):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PublicContentPermission]
     serializer_class = QuranVerseSerializer
 
     def get_queryset(self):
@@ -520,18 +523,18 @@ class QuranVS(viewsets.GenericViewSet, mixins.ListModelMixin):
 class NarrationFootnoteVS(BaseCreateUpdateDestroyVS):
     queryset = NarrationFootnote.objects.all()
     serializer_class = NarrationFootnoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NarrationRelatedFieldPermission]
 
 
 class ContentSummaryTreeVS(BaseListCreateUpdateDestroyVS):
     serializer_class = ContentSummaryTreeSerializer
     queryset = ContentSummaryTree.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [NarrationRelatedFieldPermission]
 
 
 class FilterOptionsVS(generics.ListAPIView):
     serializer_class = FilterOptionsSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PublicContentPermission]
     queryset = Narration.objects.all().values('name',
                                               'imam__name',
                                               'content_summary_tree__alphabet',
@@ -554,7 +557,7 @@ def word_is_in_splited_text(word, splited):
 
 
 class SimilarNarrations(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PublicContentPermission]
 
     def post(self, request):
 
