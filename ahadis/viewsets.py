@@ -16,6 +16,7 @@ from .pagination import *
 from .views import *
 from rest_framework import filters
 from .permissions import *
+from django.db.models import Count, Q, Prefetch
 
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
@@ -298,7 +299,7 @@ class VersesTableOfContentsView(APIView):
             queryset = queryset.filter(models.Q(content_summary_tree__narration__owner__id=user_id))
         elif user_id == -1:
             queryset = queryset.filter(
-                models.Q(content_summary_tree__narration__owner__is_superuser = True) | models.Q(
+                models.Q(content_summary_tree__narration__owner__is_superuser=True) | models.Q(
                     content_summary_tree__narration__owner=None))
         else:
             queryset = queryset.none()
@@ -414,7 +415,13 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         texts_search = self.request.query_params.get('texts_search', None)
         user_id = int(self.request.query_params.get('user_id', -1))
         request_user = self.request.user
-        queryset = Narration.objects.all()
+        # queryset = Narration.objects.all().annotate(
+        #     bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)))
+
+        queryset = Narration.objects.all().prefetch_related(
+            Prefetch("bookmarks", queryset=Bookmark.objects.filter(user=request_user))
+        ).annotate(
+            bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)))
 
         if self.action == 'retrieve' or self.action == 'list':
             if request_user.id == user_id:
@@ -565,8 +572,9 @@ class SimilarNarrations(APIView):
         if not text:
             return Response(data={'message': 'Narration text must be nonempty'}, status=400)
 
+        request_user = request.user
         text_words = list(filter(lambda x: len(x) > 1, text.split(' ')))
-        queryset = Narration.objects.all()
+        queryset = Narration.objects.filter(Q(owner=request_user) | Q(owner__is_superuser=True))
 
         original_queryset = queryset
         similar_narrations = []

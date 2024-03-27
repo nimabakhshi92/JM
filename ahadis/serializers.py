@@ -193,6 +193,12 @@ class NarrationRetrieveSerializer(serializers.ModelSerializer):
         depth = 2
 
 
+class BSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookmark
+        fields = '__all__'
+
+
 class NarrationSerializer(serializers.ModelSerializer):
     imam = ImamRelatedSerializer(queryset=Imam.objects.all())
     book = BookRelatedSerializer(queryset=Book.objects.all())
@@ -200,12 +206,17 @@ class NarrationSerializer(serializers.ModelSerializer):
     subjects = NarrationSubjectRelatedSerializer(many=True, required=False)
     summary_tree = NarrationSubjectVersePostSerializer(many=True, required=False, write_only=True)
     content_summary_tree = ContentSummaryTreeWithVersesSerializer(many=True, read_only=True)
-
+    is_bookmarked = serializers.SerializerMethodField(read_only=True)
     user_id = serializers.IntegerField(write_only=True)
 
+    bookmarks = BSerializer(many=True,read_only=True)
     class Meta:
         model = Narration
         fields = '__all__'
+
+    def get_is_bookmarked(self, obj):
+        if hasattr(obj, 'bookmarks_count'):
+            return obj.bookmarks_count > 0
 
     def create(self, validated_data):
         footnotes = validated_data.pop('footnotes') if 'footnotes' in validated_data else []
@@ -335,6 +346,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         refresh = self.get_token(self.user)
         data['expires_at'] = datetime.now() + refresh.access_token.lifetime
         data['id'] = self.user.id
+        data['is_staff'] = self.user.is_staff
 
         return data
 
@@ -387,7 +399,6 @@ class BookmarkSerializer(serializers.ModelSerializer):
         created = Bookmark.objects.create(user=user, narration=narration)
         return created
 
-
 # class UserNarrationSerializer(serializers.ModelSerializer):
 #     narration = NarrationSerializer(read_only=True)
 #     narration_id = serializers.IntegerField(write_only=True)
@@ -408,5 +419,3 @@ class BookmarkSerializer(serializers.ModelSerializer):
 #
 #         created = UserNarration.objects.create(user=user, narration=narration)
 #         return created
-
-

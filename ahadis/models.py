@@ -412,7 +412,7 @@ class NarrationVerse(models.Model):
 
 
 class Bookmark(models.Model):
-    narration = models.ForeignKey(Narration, on_delete=models.CASCADE)
+    narration = models.ForeignKey(Narration, on_delete=models.CASCADE,related_name='bookmarks')
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
