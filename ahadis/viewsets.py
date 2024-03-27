@@ -563,8 +563,37 @@ def word_is_in_splited_text(word, splited):
         return 0
 
 
+
+from fuzzywuzzy import fuzz
+from .views import remove_arabic_characters
+
+def find_all(a_str, sub):
+    start = 0
+    while True:
+        start = a_str.find(sub, start)
+        if start == -1: return
+        yield start
+        start += len(sub)
+
+
+def extract_arabic_text(content, lang_splitter):
+    len_splitter = len(lang_splitter)
+    indices = list(find_all(content, lang_splitter))
+    arabic_parts = [content[(indices[i] + len_splitter):indices[i + 1]] for i in range(len(indices)) if
+                    i % 4 == 0 and i < len(indices) - 1]
+    arabic_text = ''.join(arabic_parts)
+    return arabic_text
+
+def is_similar(expression, content, tolerance):
+    similarity_score = fuzz.partial_ratio(expression.lower(), content.lower())
+    return similarity_score >= tolerance * 100
+
+
+
 class SimilarNarrations(APIView):
     permission_classes = [PublicContentPermission]
+    lang_splitter = 'ظظظ'
+    tolerance = 0.7
 
     def post(self, request):
 
@@ -577,19 +606,28 @@ class SimilarNarrations(APIView):
         queryset = Narration.objects.filter(Q(owner=request_user) | Q(owner__is_superuser=True))
 
         original_queryset = queryset
+        text= remove_arabic_characters(text)
         similar_narrations = []
         for narration in queryset:
-            splited_narration = narration.content.split(' ')
-            intersection = [word_is_in_splited_text(word, splited_narration) for word in text_words]
-            intersection = np.array(intersection)
-            intersection_percent = sum(intersection == 1) / sum(intersection != -1) * 100
+            try:
+                narration_arabic_text = extract_arabic_text(narration.content, self.lang_splitter)
+                narration_arabic_text = remove_arabic_characters(narration_arabic_text)
+                if is_similar(text, narration_arabic_text, self.tolerance):
+                    similar_narrations.append(narration)
+            except:
+                continue
 
-            reverse_intersection = [word_is_in_splited_text(word, text_words) for word in splited_narration]
-            reverse_intersection = np.array(reverse_intersection)
-            reverse_intersection_percent = sum(reverse_intersection == 1) / sum(reverse_intersection != -1) * 100
+            # splited_narration = narration.content.split(' ')
+            # intersection = [word_is_in_splited_text(word, splited_narration) for word in text_words]
+            # intersection = np.array(intersection)
+            # intersection_percent = sum(intersection == 1) / sum(intersection != -1) * 100
+            #
+            # reverse_intersection = [word_is_in_splited_text(word, text_words) for word in splited_narration]
+            # reverse_intersection = np.array(reverse_intersection)
+            # reverse_intersection_percent = sum(reverse_intersection == 1) / sum(reverse_intersection != -1) * 100
 
-            if intersection_percent > 70 or reverse_intersection_percent > 35:
-                similar_narrations.append(narration)
+            # if intersection_percent > 70 or reverse_intersection_percent > 35:
+            #     similar_narrations.append(narration)
         queryset = original_queryset.filter(id__in=map(lambda x: x.id, similar_narrations))
         queryset.distinct().order_by('-modified')
 
