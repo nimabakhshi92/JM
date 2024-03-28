@@ -5,6 +5,14 @@ from .models import *
 MODIFY_METHODS = ('DELETE', 'PATCH', 'PUT')
 
 
+def is_superuser(user):
+    return user.is_superuser
+
+
+def is_superuser_and_empty_owner(user, owner):
+    return is_superuser(user) & (owner is None)
+
+
 class PublicContentPermission(BasePermission):
     def has_permission(self, request, view):
         return IsAuthenticatedOrReadOnly().has_permission(request, view)
@@ -26,7 +34,8 @@ class NarrationPermission(BasePermission):
         if view.action in ('retrieve', 'destroy', 'update', 'partial_update'):
             pk = view.kwargs.get('pk')
             narration = Narration.objects.get(id=pk)
-            return request_user == narration.owner
+            content_owner = narration.owner
+            return (request_user == content_owner) | is_superuser_and_empty_owner(request_user, content_owner)
         return False
 
 
@@ -39,7 +48,8 @@ class NarrationRelatedFieldPermission(BasePermission):
         if request.method == 'POST':
             narration_id = request.data.get('narration')
             narration = Narration.objects.get(id=narration_id)
-            return request_user == narration.owner
+            content_owner = narration.owner
+            return (request_user == content_owner) | is_superuser_and_empty_owner(request_user, content_owner)
 
         if view.action in ('update', 'partial_update'):
             narration_id = request.data.get('narration')
@@ -48,7 +58,8 @@ class NarrationRelatedFieldPermission(BasePermission):
         if view.action in ('update', 'partial_update', 'destroy'):
             pk = view.kwargs.get('pk')
             requested_object = view.queryset.get(id=pk)
-            return request_user == requested_object.narration.owner
+            content_owner = requested_object.narration.owner
+            return (request_user == content_owner) | is_superuser_and_empty_owner(request_user, content_owner)
         return False
 
 
