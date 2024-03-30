@@ -17,7 +17,8 @@ from .views import *
 from rest_framework import filters
 from .permissions import *
 from django.db.models import Count, Q, Prefetch
-
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                               mixins.DestroyModelMixin, mixins.ListModelMixin):
@@ -85,6 +86,7 @@ class MyTokenRefreshView(TokenRefreshView):
 class TableOfContentsView(APIView):
     permission_classes = [PublicContentPermission]
 
+    @method_decorator(cache_page(60 * 60 * 2))
     def get(self, request):
         user_id = int(self.request.query_params.get('user_id', -1))
         request_user = self.request.user
@@ -542,16 +544,18 @@ class ContentSummaryTreeVS(BaseListCreateUpdateDestroyVS):
 class FilterOptionsVS(generics.ListAPIView):
     serializer_class = FilterOptionsSerializer
     permission_classes = [PublicContentPermission]
-    queryset = Narration.objects.all().values('name',
-                                              'imam__name',
+    queryset = Narration.objects.all().values(
+        # 'name',
+        #                                       'imam__name',
                                               'content_summary_tree__alphabet',
                                               'content_summary_tree__subject_1',
-                                              'content_summary_tree__subject_2',
-                                              'content_summary_tree__subject_3',
-                                              'content_summary_tree__subject_4',
-                                              'content_summary_tree__verse__quran_verse__surah_name',
-                                              'content_summary_tree__verse__quran_verse__verse_no',
-                                              'content_summary_tree__verse__quran_verse__verse_content').distinct()
+                                              # 'content_summary_tree__subject_2',
+                                              # 'content_summary_tree__subject_3',
+                                              # 'content_summary_tree__subject_4',
+                                              # 'content_summary_tree__verse__quran_verse__surah_name',
+                                              # 'content_summary_tree__verse__quran_verse__verse_no',
+                                              # 'content_summary_tree__verse__quran_verse__verse_content'
+    ).distinct()
 
 
 def word_is_in_splited_text(word, splited):

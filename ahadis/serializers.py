@@ -209,7 +209,8 @@ class NarrationSerializer(serializers.ModelSerializer):
     is_bookmarked = serializers.SerializerMethodField(read_only=True)
     user_id = serializers.IntegerField(write_only=True)
 
-    bookmarks = BSerializer(many=True,read_only=True)
+    bookmarks = BSerializer(many=True, read_only=True)
+
     class Meta:
         model = Narration
         fields = '__all__'
@@ -254,25 +255,27 @@ class NarrationSerializer(serializers.ModelSerializer):
 
 
 class FilterOptionsSerializer(serializers.ModelSerializer):
-    narration_name = serializers.CharField(source='name')
+    # narration_name = serializers.CharField(source='name')
 
-    imam_name = serializers.CharField(source='imam__name')
+    # imam_name = serializers.CharField(source='imam__name')
 
     alphabet = serializers.CharField(max_length=200, source='content_summary_tree__alphabet')
     subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_1')
-    sub_subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_2')
-    subject_3 = serializers.CharField(max_length=200, source='content_summary_tree__subject_3')
-    subject_4 = serializers.CharField(max_length=200, source='content_summary_tree__subject_4')
 
-    surah_name = serializers.CharField(max_length=100, source='content_summary_tree__verse__quran_verse__surah_name')
-    verse_no = serializers.IntegerField(source='content_summary_tree__verse__quran_verse__verse_no')
-    verse_content = serializers.CharField(source='content_summary_tree__verse__quran_verse__verse_content')
+    # sub_subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_2')
+    # subject_3 = serializers.CharField(max_length=200, source='content_summary_tree__subject_3')
+    # subject_4 = serializers.CharField(max_length=200, source='content_summary_tree__subject_4')
+    #
+    # surah_name = serializers.CharField(max_length=100, source='content_summary_tree__verse__quran_verse__surah_name')
+    # verse_no = serializers.IntegerField(source='content_summary_tree__verse__quran_verse__verse_no')
+    # verse_content = serializers.CharField(source='content_summary_tree__verse__quran_verse__verse_content')
 
     class Meta:
         model = Narration
-        fields = ['narration_name', 'imam_name',
-                  'alphabet', 'subject', 'sub_subject', 'subject_3', 'subject_4',
-                  'surah_name', 'verse_no', 'verse_content']
+        # fields = ['narration_name', 'imam_name',
+        #           'alphabet', 'subject', 'sub_subject', 'subject_3', 'subject_4',
+        #           'surah_name', 'verse_no', 'verse_content']
+        fields = ['alphabet', 'subject']
 
 
 #########################################################################################################
