@@ -86,7 +86,6 @@ class MyTokenRefreshView(TokenRefreshView):
 class TableOfContentsView(APIView):
     permission_classes = [PublicContentPermission]
 
-    @method_decorator(cache_page(60 * 60 * 2))
     def get(self, request):
         user_id = int(self.request.query_params.get('user_id', -1))
         request_user = self.request.user
