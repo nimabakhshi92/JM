@@ -548,7 +548,7 @@ class FilterOptionsVS(generics.ListAPIView):
         #                                       'imam__name',
                                               'content_summary_tree__alphabet',
                                               'content_summary_tree__subject_1',
-                                              # 'content_summary_tree__subject_2',
+                                              'content_summary_tree__subject_2',
                                               # 'content_summary_tree__subject_3',
                                               # 'content_summary_tree__subject_4',
                                               # 'content_summary_tree__verse__quran_verse__surah_name',

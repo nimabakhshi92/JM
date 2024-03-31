@@ -262,7 +262,7 @@ class FilterOptionsSerializer(serializers.ModelSerializer):
     alphabet = serializers.CharField(max_length=200, source='content_summary_tree__alphabet')
     subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_1')
 
-    # sub_subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_2')
+    sub_subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_2')
     # subject_3 = serializers.CharField(max_length=200, source='content_summary_tree__subject_3')
     # subject_4 = serializers.CharField(max_length=200, source='content_summary_tree__subject_4')
     #
@@ -275,7 +275,7 @@ class FilterOptionsSerializer(serializers.ModelSerializer):
         # fields = ['narration_name', 'imam_name',
         #           'alphabet', 'subject', 'sub_subject', 'subject_3', 'subject_4',
         #           'surah_name', 'verse_no', 'verse_content']
-        fields = ['alphabet', 'subject']
+        fields = ['alphabet', 'subject', 'sub_subject']
 
 
 #########################################################################################################
