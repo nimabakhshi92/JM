@@ -189,7 +189,8 @@ class NarrationRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Narration
-        fields = '__all__'
+        # fields = '__all__'
+        exclude = ['owner']
         depth = 2
 
 
