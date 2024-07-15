@@ -1,3 +1,5 @@
 *.pyc
 sqlbackup
 ahadis/__pycache__
+build.py
+env.py

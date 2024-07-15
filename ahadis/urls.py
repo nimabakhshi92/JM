@@ -18,6 +18,7 @@ router.register('narration', viewsets.NarrationVS, basename='narration')
 router.register('footnote', viewsets.NarrationFootnoteVS)
 router.register('summary_tree', viewsets.ContentSummaryTreeVS)
 router.register('bookmark', viewsets.BookmarkVS, basename='bookmark')
+router.register('shared_narrations', viewsets.SharedNarrationsVS, basename='shared_narrations')
 
 # router.register('narration1', viewsets.Narration1VS, basename='narration1')
 # router.register('table_of_contents', viewsets.ContentSummaryTree1VS, basename='table_of_contents')
@@ -58,6 +59,7 @@ urlpatterns = [
     # path('api/narrations_list/', viewsets.NarrationVS.as_view(), name='narrations_list'),
     path('api/', include(router.urls)),
     path('api/filter_options/', viewsets.FilterOptionsVS.as_view(), name='test'),
-    path('api/similar_narrations/', viewsets.SimilarNarrations.as_view(), name='similar_narrations')
+    path('api/similar_narrations/', viewsets.SimilarNarrations.as_view(), name='similar_narrations'),
+    path('api/duplicate_narration/<int:narration_id>/', viewsets.DuplicateNarrationVS.as_view(), name='duplicate_narration')
 
 ]

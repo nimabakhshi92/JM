@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from datetime import datetime
 from django.shortcuts import get_object_or_404
+from .permissions import *
 
 
 class QuranSurahSerializer(serializers.Serializer):
@@ -264,6 +265,7 @@ class FilterOptionsSerializer(serializers.ModelSerializer):
     subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_1')
 
     sub_subject = serializers.CharField(max_length=200, source='content_summary_tree__subject_2')
+
     # subject_3 = serializers.CharField(max_length=200, source='content_summary_tree__subject_3')
     # subject_4 = serializers.CharField(max_length=200, source='content_summary_tree__subject_4')
     #
@@ -401,6 +403,46 @@ class BookmarkSerializer(serializers.ModelSerializer):
         user = User.objects.get(id=user_id)
 
         created = Bookmark.objects.create(user=user, narration=narration)
+        return created
+
+
+class SharedNarrationsSerializer(serializers.ModelSerializer):
+    narration = NarrationSerializer(read_only=True)
+    narration_id = serializers.IntegerField(write_only=True)
+    sender = MyUserRegisterSerializer(read_only=True)
+
+    class Meta:
+        model = SharedNarrations
+        fields = ['id', 'narration', 'narration_id', 'status', 'sender']
+        extra_kwargs = {'sender': {'read_only': True}}
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request', None)
+        user = request.user
+
+        if is_a_non_checker_admin(user):
+            allowed_fields = ['id', 'narration', 'status']
+        elif is_checker_admin(user):
+            allowed_fields = ['id', 'narration', 'status', 'sender']
+        else:
+            allowed_fields = []
+
+        representation = {field: value for field, value in representation.items() if field in allowed_fields}
+        return representation
+
+    def create(self, validated_data):
+        sender_id = validated_data.pop('sender_id')
+        sender = User.objects.get(id=sender_id)
+
+        receiver_id = validated_data.pop('receiver_id')
+        receiver = User.objects.get(id=receiver_id)
+
+        narration_id = validated_data.pop('narration_id')
+        narration = Narration.objects.get(pk=narration_id)
+
+        created = SharedNarrations.objects.create(sender=sender, receiver=receiver, narration=narration,
+                                                  status=validated_data['status'])
         return created
 
 # class UserNarrationSerializer(serializers.ModelSerializer):

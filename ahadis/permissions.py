@@ -1,12 +1,29 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAuthenticatedOrReadOnly, IsAuthenticated, \
     IsAdminUser
 from .models import *
+from env import checker_admin_id
 
 MODIFY_METHODS = ('DELETE', 'PATCH', 'PUT')
 
 
 def is_superuser(user):
     return user.is_superuser
+
+
+def is_admin(user):
+    return user.is_staff
+
+
+def is_only_admin(user):
+    return is_admin(user) and not is_superuser(user)
+
+
+def is_checker_admin(user):
+    return user.id == checker_admin_id
+
+
+def is_a_non_checker_admin(user):
+    return is_admin(user) and not is_checker_admin(user)
 
 
 def is_superuser_and_empty_owner(user, owner):
@@ -73,3 +90,34 @@ class BookmarkPermission(BasePermission):
             pk = view.kwargs.get('pk')
             bookmark = Bookmark.objects.get(id=pk)
             return bookmark.user == request.user
+
+
+class SharedNarrationsPermission(BasePermission):
+    def has_permission(self, request, view):
+        request_user = request.user
+        if view.action in ('update', 'partial_update') and 'narration_id' in request.data:
+            return False
+
+        if is_checker_admin(request_user) and view.action == 'create':
+            return False
+
+        if is_checker_admin(request_user):
+            return True
+
+        narration_id = request.data.get('narration_id')
+
+        if is_a_non_checker_admin(request_user) and view.action == 'create':
+            narration = Narration.objects.get(pk=narration_id)
+            if narration.owner != request_user:
+                return False
+
+        if is_a_non_checker_admin(request_user) and view.action in ('list', 'create'):
+            return True
+
+        return False
+
+
+class DuplicateNarrationPermission(BasePermission):
+    def has_permission(self, request, view):
+        request_user = request.user
+        return is_checker_admin(request_user)

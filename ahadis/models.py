@@ -2,11 +2,6 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 
-
-# class Narration(models.Model):
-#     narration_text = models.CharField(max_length=20000)
-#     # date = models.DateTimeField('date')
-
 class Book(models.Model):
     name = models.CharField(max_length=200)
     publisher = models.CharField(max_length=200)
@@ -129,7 +124,7 @@ class NarrationSubjectVerse(models.Model):
 
 
 class NarrationVerse(models.Model):
-    narration = models.ForeignKey(Narration, models.CASCADE)
+    narration = models.ForeignKey(Narration, models.CASCADE, related_name='narration_verses')
     quran_verse = models.ForeignKey(QuranVerse, models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -412,7 +407,7 @@ class NarrationVerse(models.Model):
 
 
 class Bookmark(models.Model):
-    narration = models.ForeignKey(Narration, on_delete=models.CASCADE,related_name='bookmarks')
+    narration = models.ForeignKey(Narration, on_delete=models.CASCADE, related_name='bookmarks')
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -420,6 +415,29 @@ class Bookmark(models.Model):
     class Meta:
         db_table = 'Bookmark'
         unique_together = (('narration', 'user'),)
+
+
+class SharedNarrations(models.Model):
+    sender = models.ForeignKey(User, models.CASCADE, related_name='senders')
+    receiver = models.ForeignKey(User, models.CASCADE, related_name='receivers')
+    narration = models.ForeignKey(Narration, models.CASCADE)
+    status = models.CharField(max_length=200)
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'SharedNarrations'
+        unique_together = (('narration', 'sender'),)
+
+
+
+
+
+
+
+
+
+
 
 
 # class UserNarration(models.Model):

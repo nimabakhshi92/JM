@@ -1,3 +1,5 @@
+import copy
+import datetime
 import json
 
 from rest_framework import viewsets
@@ -19,6 +21,7 @@ from .permissions import *
 from django.db.models import Count, Q, Prefetch
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+from django.db import transaction
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                               mixins.DestroyModelMixin, mixins.ListModelMixin):
@@ -546,14 +549,14 @@ class FilterOptionsVS(generics.ListAPIView):
     queryset = Narration.objects.all().values(
         # 'name',
         #                                       'imam__name',
-                                              'content_summary_tree__alphabet',
-                                              'content_summary_tree__subject_1',
-                                              'content_summary_tree__subject_2',
-                                              # 'content_summary_tree__subject_3',
-                                              # 'content_summary_tree__subject_4',
-                                              # 'content_summary_tree__verse__quran_verse__surah_name',
-                                              # 'content_summary_tree__verse__quran_verse__verse_no',
-                                              # 'content_summary_tree__verse__quran_verse__verse_content'
+        'content_summary_tree__alphabet',
+        'content_summary_tree__subject_1',
+        'content_summary_tree__subject_2',
+        # 'content_summary_tree__subject_3',
+        # 'content_summary_tree__subject_4',
+        # 'content_summary_tree__verse__quran_verse__surah_name',
+        # 'content_summary_tree__verse__quran_verse__verse_no',
+        # 'content_summary_tree__verse__quran_verse__verse_content'
     ).distinct()
 
 
@@ -566,9 +569,9 @@ def word_is_in_splited_text(word, splited):
         return 0
 
 
-
 from fuzzywuzzy import fuzz
 from .views import remove_arabic_characters
+
 
 def find_all(a_str, sub):
     start = 0
@@ -587,10 +590,10 @@ def extract_arabic_text(content, lang_splitter):
     arabic_text = ''.join(arabic_parts)
     return arabic_text
 
+
 def is_similar(expression, content, tolerance):
     similarity_score = fuzz.partial_ratio(expression.lower(), content.lower())
     return similarity_score >= tolerance * 100
-
 
 
 class SimilarNarrations(APIView):
@@ -609,7 +612,7 @@ class SimilarNarrations(APIView):
         queryset = Narration.objects.filter(Q(owner=request_user) | Q(owner__is_superuser=True))
 
         original_queryset = queryset
-        text= remove_arabic_characters(text)
+        text = remove_arabic_characters(text)
         similar_narrations = []
         for narration in queryset:
             try:
@@ -654,3 +657,77 @@ class BookmarkVS(BaseListCreateDestroyVS):
         if serialized.is_valid():
             serialized.save()
             return Response(serialized.data, status=status.HTTP_201_CREATED)
+
+
+class SharedNarrationsVS(BaseListCreateRetrieveUpdateDestroyVS):
+    permission_classes = [SharedNarrationsPermission]
+    serializer_class = SharedNarrationsSerializer
+
+    def get_queryset(self):
+        request_user = self.request.user
+
+        # return SharedNarrations.objects.all()
+        if is_checker_admin(request_user):
+            return SharedNarrations.objects.all()
+        if is_a_non_checker_admin(request_user):
+            return SharedNarrations.objects.filter(sender=request_user)
+
+    def create(self, request, *args, **kwargs):
+        sender_id = request.user.id
+        request_data = request.data
+        data = copy.deepcopy(request_data)
+        data['sender_id'] = sender_id
+
+        receiver_id = checker_admin_id
+
+        data['receiver_id'] = receiver_id
+        serialized = SharedNarrationsSerializer(data=data)
+        if serialized.is_valid():
+            serialized.save()
+            return Response(serialized.data, status=status.HTTP_201_CREATED)
+
+
+class DuplicateNarrationVS(APIView):
+    permission_classes = [DuplicateNarrationPermission]
+
+    def post(self, request, *args, **kwargs):
+        request_user = request.user
+        narration_id = kwargs.get('narration_id')
+        original_narration = Narration.objects.get(pk=narration_id)
+
+        with transaction.atomic():
+            new_narration = Narration.objects.create(
+                name=original_narration.name,
+                imam=original_narration.imam,
+                narrator=original_narration.narrator,
+                content=original_narration.content,
+                book=original_narration.book,
+                book_vol_no=original_narration.book_vol_no,
+                book_page_no=original_narration.book_page_no,
+                book_narration_no=original_narration.book_narration_no,
+                owner=request_user,
+            )
+            for subject in original_narration.subjects.all():
+                NarrationSubject.objects.create(narration=new_narration, subject=subject.subject)
+
+            for footnote in original_narration.footnotes.all():
+                NarrationFootnote.objects.create(narration=new_narration,
+                                                 expression=footnote.expression,
+                                                 explanation=footnote.explanation
+                                                 )
+
+            for cst in original_narration.content_summary_tree.all():
+                ContentSummaryTree.objects.create(narration=new_narration,
+                                                  alphabet=cst.alphabet,
+                                                  subject_1=cst.subject_1,
+                                                  subject_2=cst.subject_2,
+                                                  subject_3=cst.subject_3,
+                                                  subject_4=cst.subject_4,
+                                                  expression=cst.expression,
+                                                  summary=cst.summary,
+                                                  )
+
+            for verse in original_narration.narration_verses.all():
+                NarrationVerse.objects.create(narration=new_narration, quran_verse=verse.quran_verse)
+
+            return Response(NarrationSerializer(new_narration).data, status=status.HTTP_201_CREATED)
