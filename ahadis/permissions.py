@@ -111,7 +111,7 @@ class SharedNarrationsPermission(BasePermission):
             if narration.owner != request_user:
                 return False
 
-        if is_a_non_checker_admin(request_user) and view.action in ('list', 'create'):
+        if is_a_non_checker_admin(request_user) and view.action in ('list', 'create', 'partial_update'):
             return True
 
         return False

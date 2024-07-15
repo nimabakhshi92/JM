@@ -353,6 +353,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['expires_at'] = datetime.now() + refresh.access_token.lifetime
         data['id'] = self.user.id
         data['is_staff'] = self.user.is_staff
+        data['is_checker_admin'] = is_checker_admin(self.user)
 
         return data
 
@@ -410,25 +411,29 @@ class SharedNarrationsSerializer(serializers.ModelSerializer):
     narration = NarrationSerializer(read_only=True)
     narration_id = serializers.IntegerField(write_only=True)
     sender = MyUserRegisterSerializer(read_only=True)
+    sender_id = serializers.IntegerField(write_only=True)
+    receiver_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = SharedNarrations
-        fields = ['id', 'narration', 'narration_id', 'status', 'sender']
-        extra_kwargs = {'sender': {'read_only': True}}
+        fields = ['id', 'narration', 'narration_id', 'status', 'sender', 'sender_id', 'receiver_id',
+                  'created']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         request = self.context.get('request', None)
-        user = request.user
 
-        if is_a_non_checker_admin(user):
-            allowed_fields = ['id', 'narration', 'status']
-        elif is_checker_admin(user):
-            allowed_fields = ['id', 'narration', 'status', 'sender']
-        else:
-            allowed_fields = []
+        if request and request.method == 'GET':
+            user = request.user
+            if is_a_non_checker_admin(user):
+                allowed_fields = ['id', 'narration', 'status', 'created']
+            elif is_checker_admin(user):
+                allowed_fields = ['id', 'narration', 'status', 'sender', 'created']
+            else:
+                allowed_fields = []
 
-        representation = {field: value for field, value in representation.items() if field in allowed_fields}
+            representation = {field: value for field, value in representation.items() if field in allowed_fields}
+
         return representation
 
     def create(self, validated_data):

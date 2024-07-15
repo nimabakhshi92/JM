@@ -663,6 +663,11 @@ class SharedNarrationsVS(BaseListCreateRetrieveUpdateDestroyVS):
     permission_classes = [SharedNarrationsPermission]
     serializer_class = SharedNarrationsSerializer
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     def get_queryset(self):
         request_user = self.request.user
 
