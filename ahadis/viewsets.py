@@ -1,7 +1,7 @@
 import copy
 import datetime
 import json
-
+from env import *
 from rest_framework import viewsets
 from .models import *
 from .serializers import *
@@ -692,6 +692,44 @@ class SharedNarrationsVS(BaseListCreateRetrieveUpdateDestroyVS):
             return Response(serialized.data, status=status.HTTP_201_CREATED)
 
 
+def duplicate_narration(original_narration, new_owner):
+    new_narration = Narration.objects.create(
+        name=original_narration.name,
+        imam=original_narration.imam,
+        narrator=original_narration.narrator,
+        content=original_narration.content,
+        book=original_narration.book,
+        book_vol_no=original_narration.book_vol_no,
+        book_page_no=original_narration.book_page_no,
+        book_narration_no=original_narration.book_narration_no,
+        owner=new_owner,
+    )
+    for subject in original_narration.subjects.all():
+        NarrationSubject.objects.create(narration=new_narration, subject=subject.subject)
+
+    for footnote in original_narration.footnotes.all():
+        NarrationFootnote.objects.create(narration=new_narration,
+                                         expression=footnote.expression,
+                                         explanation=footnote.explanation
+                                         )
+
+    for cst in original_narration.content_summary_tree.all():
+        ContentSummaryTree.objects.create(narration=new_narration,
+                                          alphabet=cst.alphabet,
+                                          subject_1=cst.subject_1,
+                                          subject_2=cst.subject_2,
+                                          subject_3=cst.subject_3,
+                                          subject_4=cst.subject_4,
+                                          expression=cst.expression,
+                                          summary=cst.summary,
+                                          )
+
+    for verse in original_narration.narration_verses.all():
+        NarrationVerse.objects.create(narration=new_narration, quran_verse=verse.quran_verse)
+
+    return new_narration
+
+
 class DuplicateNarrationVS(APIView):
     permission_classes = [DuplicateNarrationPermission]
 
@@ -701,38 +739,21 @@ class DuplicateNarrationVS(APIView):
         original_narration = Narration.objects.get(pk=narration_id)
 
         with transaction.atomic():
-            new_narration = Narration.objects.create(
-                name=original_narration.name,
-                imam=original_narration.imam,
-                narrator=original_narration.narrator,
-                content=original_narration.content,
-                book=original_narration.book,
-                book_vol_no=original_narration.book_vol_no,
-                book_page_no=original_narration.book_page_no,
-                book_narration_no=original_narration.book_narration_no,
-                owner=request_user,
-            )
-            for subject in original_narration.subjects.all():
-                NarrationSubject.objects.create(narration=new_narration, subject=subject.subject)
+            new_narration = duplicate_narration(original_narration, request_user)
 
-            for footnote in original_narration.footnotes.all():
-                NarrationFootnote.objects.create(narration=new_narration,
-                                                 expression=footnote.expression,
-                                                 explanation=footnote.explanation
-                                                 )
+            return Response(NarrationSerializer(new_narration).data, status=status.HTTP_201_CREATED)
 
-            for cst in original_narration.content_summary_tree.all():
-                ContentSummaryTree.objects.create(narration=new_narration,
-                                                  alphabet=cst.alphabet,
-                                                  subject_1=cst.subject_1,
-                                                  subject_2=cst.subject_2,
-                                                  subject_3=cst.subject_3,
-                                                  subject_4=cst.subject_4,
-                                                  expression=cst.expression,
-                                                  summary=cst.summary,
-                                                  )
 
-            for verse in original_narration.narration_verses.all():
-                NarrationVerse.objects.create(narration=new_narration, quran_verse=verse.quran_verse)
+class MoveToMainSiteNarrationVS(APIView):
+    permission_classes = [DuplicateNarrationPermission]
+
+    def post(self, request, *args, **kwargs):
+        new_owner = User.objects.get(pk=super_admin_id)
+        narration_id = kwargs.get('narration_id')
+        original_narration = Narration.objects.get(pk=narration_id)
+
+        with transaction.atomic():
+            new_narration = duplicate_narration(original_narration, new_owner=new_owner)
+            original_narration.delete()
 
             return Response(NarrationSerializer(new_narration).data, status=status.HTTP_201_CREATED)

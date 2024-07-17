@@ -354,6 +354,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['id'] = self.user.id
         data['is_staff'] = self.user.is_staff
         data['is_checker_admin'] = is_checker_admin(self.user)
+        data['is_super_admin'] = is_superuser(self.user)
 
         return data
 

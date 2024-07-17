@@ -1,10 +1,8 @@
-from rest_framework.authtoken.views import obtain_auth_token
 from django.urls import path, include
-from django.views.decorators.cache import cache_page
+from rest_framework.routers import DefaultRouter
+
 from . import views
 from . import viewsets
-from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 
 app_name = 'ahadis'
 
@@ -60,6 +58,8 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/filter_options/', viewsets.FilterOptionsVS.as_view(), name='test'),
     path('api/similar_narrations/', viewsets.SimilarNarrations.as_view(), name='similar_narrations'),
-    path('api/duplicate_narration/<int:narration_id>/', viewsets.DuplicateNarrationVS.as_view(), name='duplicate_narration')
-
+    path('api/duplicate_narration/<int:narration_id>/', viewsets.DuplicateNarrationVS.as_view(),
+         name='duplicate_narration'),
+    path('api/move_narration_to_main_site/<int:narration_id>/', viewsets.MoveToMainSiteNarrationVS.as_view(),
+         name='move_narration_to_main_site'),
 ]
