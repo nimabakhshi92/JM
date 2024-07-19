@@ -6,7 +6,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 from datetime import datetime
 from django.shortcuts import get_object_or_404
 from .permissions import *
-
+from django.db import transaction
 
 class QuranSurahSerializer(serializers.Serializer):
     surah_no = serializers.IntegerField()
@@ -57,6 +57,12 @@ class NarrationSubjectModelSerializer(serializers.ModelSerializer):
                 'write_only': True
             }
         }
+
+    def create(self, validated_data):
+        narration = validated_data.get('narration')
+        with transaction.atomic():
+            narration.save()
+            return super().create(validated_data)
 
 
 class NarrationSubjectRelatedSerializer(serializers.ModelSerializer):

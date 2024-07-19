@@ -41,6 +41,7 @@ class Narration(models.Model):
     book_page_no = models.IntegerField()
     book_narration_no = models.IntegerField()
     owner = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True)
+    is_complete = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
@@ -52,10 +53,10 @@ class Narration(models.Model):
 
 
 class NarrationSubject(models.Model):
-    narration = models.ForeignKey(Narration, models.CASCADE, related_name='subjects')
+    narration = models.ForeignKey(Narration, models.CASCADE, related_name='subjects', db_index=True)
     subject = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    modified = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
         db_table = 'NarrationSubject'
@@ -65,11 +66,11 @@ class NarrationSubject(models.Model):
 
 
 class NarrationFootnote(models.Model):
-    narration = models.ForeignKey(Narration, models.CASCADE, related_name='footnotes')
+    narration = models.ForeignKey(Narration, models.CASCADE, related_name='footnotes', db_index=True)
     expression = models.TextField(default="")
     explanation = models.TextField(default="")
     created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    modified = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
         db_table = 'NarrationFootnote'
@@ -94,7 +95,7 @@ class QuranVerse(models.Model):
 
 
 class ContentSummaryTree(models.Model):
-    narration = models.ForeignKey(Narration, models.CASCADE, related_name='content_summary_tree')
+    narration = models.ForeignKey(Narration, models.CASCADE, related_name='content_summary_tree', db_index=True)
     alphabet = models.CharField(max_length=200)
     subject_1 = models.CharField(max_length=200, default="")
     subject_2 = models.CharField(max_length=200, default="")
@@ -103,7 +104,7 @@ class ContentSummaryTree(models.Model):
     expression = models.TextField(default="", blank=True)
     summary = models.TextField(default="", blank=True)
     created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    modified = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
         db_table = 'ContentSummaryTree'
@@ -124,10 +125,10 @@ class NarrationSubjectVerse(models.Model):
 
 
 class NarrationVerse(models.Model):
-    narration = models.ForeignKey(Narration, models.CASCADE, related_name='narration_verses')
+    narration = models.ForeignKey(Narration, models.CASCADE, related_name='narration_verses', db_index=True)
     quran_verse = models.ForeignKey(QuranVerse, models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    modified = models.DateTimeField(auto_now=True, db_index=True)
 
     class Meta:
         db_table = 'NarrationVerse'

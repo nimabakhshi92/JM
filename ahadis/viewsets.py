@@ -18,10 +18,12 @@ from .pagination import *
 from .views import *
 from rest_framework import filters
 from .permissions import *
-from django.db.models import Count, Q, Prefetch
+from django.db.models import Count, Q, Prefetch, F
+from django.db.models.functions import Greatest
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django.db import transaction
+
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                               mixins.DestroyModelMixin, mixins.ListModelMixin):
@@ -422,10 +424,26 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         # queryset = Narration.objects.all().annotate(
         #     bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)))
 
-        queryset = Narration.objects.all().prefetch_related(
+        queryset = (Narration.objects.all()
+        .prefetch_related(
+            'subjects', 'footnotes', 'narration_verses', 'content_summary_tree')
+        .prefetch_related(
             Prefetch("bookmarks", queryset=Bookmark.objects.filter(user=request_user))
         ).annotate(
-            bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)))
+            bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)),
+            content_summary_tree_last_modified=Max('content_summary_tree__modified'),
+            # subjects_last_modified=Max('subjects__modified'),
+            footnotes_last_modified=Max('footnotes__modified'),
+            # narration_verses_last_modified=Max('narration_verses__modified'),
+            last_modified=Greatest(
+                'modified',
+                'content_summary_tree_last_modified',
+                # 'subjects_last_modified',
+                'footnotes_last_modified',
+                # 'narration_verses_last_modified',
+            )
+        )
+        )
 
         if self.action == 'retrieve' or self.action == 'list':
             if request_user.id == user_id:
@@ -469,6 +487,8 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
             queryset = original_queryset.filter(id__in=map(lambda x: x.id, queryset))
 
         sort_by = self.request.query_params.get('sort_by', 'modified')
+        if sort_by == 'modified':
+            sort_by = 'last_modified'
         sort_type = self.request.query_params.get('sort_type', None)
         sort_type = '' if sort_type == 'asc' else '-'
 
@@ -714,7 +734,7 @@ def duplicate_narration(original_narration, new_owner):
                                          )
 
     for cst in original_narration.content_summary_tree.all():
-        ContentSummaryTree.objects.create(narration=new_narration,
+        new_cst = ContentSummaryTree.objects.create(narration=new_narration,
                                           alphabet=cst.alphabet,
                                           subject_1=cst.subject_1,
                                           subject_2=cst.subject_2,
@@ -723,6 +743,12 @@ def duplicate_narration(original_narration, new_owner):
                                           expression=cst.expression,
                                           summary=cst.summary,
                                           )
+        try:
+            quran_verse = cst.verse.quran_verse
+            NarrationSubjectVerse.objects.create(quran_verse=quran_verse,
+                                                 content_summary_tree=new_cst)
+        except:
+            pass
 
     for verse in original_narration.narration_verses.all():
         NarrationVerse.objects.create(narration=new_narration, quran_verse=verse.quran_verse)
