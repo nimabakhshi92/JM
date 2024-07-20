@@ -424,26 +424,7 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         # queryset = Narration.objects.all().annotate(
         #     bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)))
 
-        queryset = (Narration.objects.all()
-        .prefetch_related(
-            'subjects', 'footnotes', 'narration_verses', 'content_summary_tree')
-        .prefetch_related(
-            Prefetch("bookmarks", queryset=Bookmark.objects.filter(user=request_user))
-        ).annotate(
-            bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)),
-            content_summary_tree_last_modified=Max('content_summary_tree__modified'),
-            # subjects_last_modified=Max('subjects__modified'),
-            footnotes_last_modified=Max('footnotes__modified'),
-            # narration_verses_last_modified=Max('narration_verses__modified'),
-            last_modified=Greatest(
-                'modified',
-                'content_summary_tree_last_modified',
-                # 'subjects_last_modified',
-                'footnotes_last_modified',
-                # 'narration_verses_last_modified',
-            )
-        )
-        )
+        queryset = Narration.objects.all()
 
         if self.action == 'retrieve' or self.action == 'list':
             if request_user.id == user_id:
@@ -485,6 +466,25 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
                             break
                 queryset = filtered_queryset
             queryset = original_queryset.filter(id__in=map(lambda x: x.id, queryset))
+
+        queryset = queryset.prefetch_related(
+            'subjects', 'footnotes', 'narration_verses', 'content_summary_tree').prefetch_related(
+            Prefetch("bookmarks", queryset=Bookmark.objects.filter(user=request_user))
+        ).annotate(
+            bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)),
+            content_summary_tree_last_modified=Max('content_summary_tree__modified'),
+            # subjects_last_modified=Max('subjects__modified'),
+            footnotes_last_modified=Max('footnotes__modified'),
+            # narration_verses_last_modified=Max('narration_verses__modified'),
+            last_modified=Greatest(
+                'modified',
+                'content_summary_tree_last_modified',
+                # 'subjects_last_modified',
+                'footnotes_last_modified',
+                # 'narration_verses_last_modified',
+            )
+        )
+
 
         sort_by = self.request.query_params.get('sort_by', 'modified')
         if sort_by == 'modified':
