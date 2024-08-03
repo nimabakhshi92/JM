@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 
+
 class Book(models.Model):
     name = models.CharField(max_length=200)
     publisher = models.CharField(max_length=200)
@@ -421,7 +422,9 @@ class Bookmark(models.Model):
 class SharedNarrations(models.Model):
     sender = models.ForeignKey(User, models.CASCADE, related_name='senders')
     receiver = models.ForeignKey(User, models.CASCADE, related_name='receivers')
-    narration = models.ForeignKey(Narration, models.CASCADE)
+    narration = models.OneToOneField(Narration, models.CASCADE)
+    receiver_narration = models.OneToOneField(Narration, null=True, on_delete=models.SET_NULL,
+                                              related_name='shared_narration')
     status = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -429,17 +432,6 @@ class SharedNarrations(models.Model):
     class Meta:
         db_table = 'SharedNarrations'
         unique_together = (('narration', 'sender'),)
-
-
-
-
-
-
-
-
-
-
-
 
 # class UserNarration(models.Model):
 #     narration = models.ForeignKey(Narration, on_delete=models.CASCADE, related_name='users_narrations')

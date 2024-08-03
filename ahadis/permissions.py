@@ -95,7 +95,8 @@ class BookmarkPermission(BasePermission):
 class SharedNarrationsPermission(BasePermission):
     def has_permission(self, request, view):
         request_user = request.user
-        if view.action in ('update', 'partial_update') and 'narration_id' in request.data:
+        if (view.action in ('update', 'partial_update')
+                and ('narration_id' in request.data or 'receiver_id' in request.data or 'sender_id' in request.data)):
             return False
 
         if is_checker_admin(request_user) and view.action == 'create':

@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from .permissions import *
 from django.db import transaction
 
+
 class QuranSurahSerializer(serializers.Serializer):
     surah_no = serializers.IntegerField()
     surah_name = serializers.CharField(max_length=100)
@@ -216,6 +217,8 @@ class NarrationSerializer(serializers.ModelSerializer):
     content_summary_tree = ContentSummaryTreeWithVersesSerializer(many=True, read_only=True)
     is_bookmarked = serializers.SerializerMethodField(read_only=True)
     user_id = serializers.IntegerField(write_only=True)
+    status = serializers.CharField(source='shared_narration.status', read_only=True)
+    receiver_narration = serializers.IntegerField(source='shared_narration.receiver_narration.id', read_only=True)
 
     bookmarks = BSerializer(many=True, read_only=True)
 
@@ -424,7 +427,7 @@ class SharedNarrationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SharedNarrations
         fields = ['id', 'narration', 'narration_id', 'status', 'sender', 'sender_id', 'receiver_id',
-                  'created']
+                  'created', 'receiver_narration']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -435,7 +438,7 @@ class SharedNarrationsSerializer(serializers.ModelSerializer):
             if is_a_non_checker_admin(user):
                 allowed_fields = ['id', 'narration', 'status', 'created']
             elif is_checker_admin(user):
-                allowed_fields = ['id', 'narration', 'status', 'sender', 'created']
+                allowed_fields = ['id', 'narration', 'status', 'sender', 'created', 'receiver_narration']
             else:
                 allowed_fields = []
 
@@ -456,6 +459,12 @@ class SharedNarrationsSerializer(serializers.ModelSerializer):
         created = SharedNarrations.objects.create(sender=sender, receiver=receiver, narration=narration,
                                                   status=validated_data['status'])
         return created
+
+
+class SharedNarrationsPatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SharedNarrations
+        fields = ['status', 'receiver_narration']
 
 # class UserNarrationSerializer(serializers.ModelSerializer):
 #     narration = NarrationSerializer(read_only=True)

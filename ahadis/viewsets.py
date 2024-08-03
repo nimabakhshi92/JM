@@ -23,6 +23,7 @@ from django.db.models.functions import Greatest
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
 from django.db import transaction
+from .enums import *
 
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
@@ -485,7 +486,6 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
             )
         )
 
-
         sort_by = self.request.query_params.get('sort_by', 'modified')
         if sort_by == 'modified':
             sort_by = 'last_modified'
@@ -679,6 +679,22 @@ class BookmarkVS(BaseListCreateDestroyVS):
             return Response(serialized.data, status=status.HTTP_201_CREATED)
 
 
+def is_valid_shared_narration_update(current_status, new_status):
+    if current_status == SharedNarrationsStatus.PENDING.value:
+        return new_status in [SharedNarrationsStatus.CHECKING.value]
+
+    if current_status == SharedNarrationsStatus.CHECKING.value:
+        return new_status in [SharedNarrationsStatus.REJECTED.value, SharedNarrationsStatus.ACCEPTED.value]
+
+    if current_status == SharedNarrationsStatus.REJECTED.value:
+        return new_status in [SharedNarrationsStatus.PENDING.value]
+
+    if current_status == SharedNarrationsStatus.ACCEPTED.value:
+        return new_status in [SharedNarrationsStatus.REJECTED.value,
+                              SharedNarrationsStatus.TRANSFERRED.value]
+    return False
+
+
 class SharedNarrationsVS(BaseListCreateRetrieveUpdateDestroyVS):
     permission_classes = [SharedNarrationsPermission]
     serializer_class = SharedNarrationsSerializer
@@ -697,6 +713,11 @@ class SharedNarrationsVS(BaseListCreateRetrieveUpdateDestroyVS):
         if is_a_non_checker_admin(request_user):
             return SharedNarrations.objects.filter(sender=request_user)
 
+    def get_serializer_class(self):
+        if self.action == 'partial_update':
+            return SharedNarrationsPatchSerializer
+        return SharedNarrationsSerializer
+
     def create(self, request, *args, **kwargs):
         sender_id = request.user.id
         request_data = request.data
@@ -710,6 +731,40 @@ class SharedNarrationsVS(BaseListCreateRetrieveUpdateDestroyVS):
         if serialized.is_valid():
             serialized.save()
             return Response(serialized.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        request_user = request.user
+        request_data = request.data
+        data = copy.deepcopy(request_data)
+
+        instance = SharedNarrations.objects.get(pk=kwargs.get('pk'))
+        current_status = instance.status
+        new_status = data.get('status')
+        is_valid_update = is_valid_shared_narration_update(current_status, new_status)
+        if not is_valid_update:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        if new_status == SharedNarrationsStatus.CHECKING.value:
+            original_narration = instance.narration
+            with transaction.atomic():
+                new_narration = duplicate_narration(original_narration, request_user)
+                data['receiver_narration'] = new_narration.id
+                serialized = SharedNarrationsPatchSerializer(instance, data=data)
+                if serialized.is_valid():
+                    serialized.save()
+                    return Response(serialized.data, status=status.HTTP_200_OK)
+                else:
+                    raise Exception('Bad request')
+
+        if new_status == SharedNarrationsStatus.REJECTED.value:
+            with transaction.atomic():
+                received_narration_id = instance.receiver_narration.id
+                received_narration = Narration.objects.get(pk=received_narration_id)
+                received_narration.delete()
+                return super().partial_update(request, *args, **kwargs)
+
+        if new_status == SharedNarrationsStatus.ACCEPTED.value or new_status == SharedNarrationsStatus.PENDING.value:
+            return super().partial_update(request, *args, **kwargs)
 
 
 def duplicate_narration(original_narration, new_owner):
@@ -735,14 +790,14 @@ def duplicate_narration(original_narration, new_owner):
 
     for cst in original_narration.content_summary_tree.all():
         new_cst = ContentSummaryTree.objects.create(narration=new_narration,
-                                          alphabet=cst.alphabet,
-                                          subject_1=cst.subject_1,
-                                          subject_2=cst.subject_2,
-                                          subject_3=cst.subject_3,
-                                          subject_4=cst.subject_4,
-                                          expression=cst.expression,
-                                          summary=cst.summary,
-                                          )
+                                                    alphabet=cst.alphabet,
+                                                    subject_1=cst.subject_1,
+                                                    subject_2=cst.subject_2,
+                                                    subject_3=cst.subject_3,
+                                                    subject_4=cst.subject_4,
+                                                    expression=cst.expression,
+                                                    summary=cst.summary,
+                                                    )
         try:
             quran_verse = cst.verse.quran_verse
             NarrationSubjectVerse.objects.create(quran_verse=quran_verse,
@@ -770,16 +825,28 @@ class DuplicateNarrationVS(APIView):
             return Response(NarrationSerializer(new_narration).data, status=status.HTTP_201_CREATED)
 
 
+def move_narration_to_main_site(*args, **kwargs):
+    new_owner = User.objects.get(pk=super_admin_id)
+    narration_id = kwargs.get('narration_id')
+    original_narration = Narration.objects.get(pk=narration_id)
+
+    with transaction.atomic():
+        new_narration = duplicate_narration(original_narration, new_owner=new_owner)
+        original_narration.delete()
+        return new_narration
+
+
 class MoveToMainSiteNarrationVS(APIView):
     permission_classes = [DuplicateNarrationPermission]
 
     def post(self, request, *args, **kwargs):
-        new_owner = User.objects.get(pk=super_admin_id)
-        narration_id = kwargs.get('narration_id')
-        original_narration = Narration.objects.get(pk=narration_id)
-
         with transaction.atomic():
-            new_narration = duplicate_narration(original_narration, new_owner=new_owner)
-            original_narration.delete()
+            narration_id = kwargs.get('narration_id')
+            original_narration = Narration.objects.get(pk=narration_id)
+            shared_narration = original_narration.shared_narration
+            if shared_narration:
+                shared_narration.status = SharedNarrationsStatus.TRANSFERRED.value
+                shared_narration.save()
+            new_narration = move_narration_to_main_site(*args, **kwargs)
 
             return Response(NarrationSerializer(new_narration).data, status=status.HTTP_201_CREATED)
