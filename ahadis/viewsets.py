@@ -843,8 +843,9 @@ class MoveToMainSiteNarrationVS(APIView):
         with transaction.atomic():
             narration_id = kwargs.get('narration_id')
             original_narration = Narration.objects.get(pk=narration_id)
-            shared_narration = original_narration.shared_narration
-            if shared_narration:
+
+            if hasattr(original_narration, 'shared_narration'):
+                shared_narration = original_narration.shared_narration
                 shared_narration.status = SharedNarrationsStatus.TRANSFERRED.value
                 shared_narration.save()
             new_narration = move_narration_to_main_site(*args, **kwargs)
