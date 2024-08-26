@@ -62,4 +62,6 @@ urlpatterns = [
          name='duplicate_narration'),
     path('api/move_narration_to_main_site/<int:narration_id>/', viewsets.MoveToMainSiteNarrationVS.as_view(),
          name='move_narration_to_main_site'),
+    path('api/prometheus/', include('django_prometheus.urls')),
+
 ]
