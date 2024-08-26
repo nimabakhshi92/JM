@@ -26,7 +26,7 @@ DEBUG = True
 
 # ALLOWED_HOSTS = ['*' ,'141.11.42.252', '141.11.42.252:81', '127.0.0.1', 'localhost']
 ALLOWED_HOSTS = ['5.61.24.114', '127.0.0.1', 'aynolhayaat.com', 'www.aynolhayaat.com', '5.61.24.114:4000',
-                 '185.243.48.16']
+                 '185.243.48.16', 'localhost']
 
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
