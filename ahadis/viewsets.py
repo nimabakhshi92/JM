@@ -1,29 +1,31 @@
 import copy
 import datetime
-import json
 from env import *
-from rest_framework import viewsets
 from .models import *
 from .serializers import *
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status, generics
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
-from .serializers import MyTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import mixins, viewsets
 from django.db.models import Max
 from .pagination import *
 from .views import *
-from rest_framework import filters
 from .permissions import *
 from django.db.models import Count, Q, Prefetch, F
 from django.db.models.functions import Greatest
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
 from django.db import transaction
 from .enums import *
+
+from rest_framework.response import Response
+from django.http import HttpResponse
+from docx import Document
+from io import BytesIO
+from zipfile import ZipFile
+from docx.shared import Pt, RGBColor
+from docx.oxml import OxmlElement
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.oxml.ns import qn
 
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
@@ -851,3 +853,83 @@ class MoveToMainSiteNarrationVS(APIView):
             new_narration = move_narration_to_main_site(*args, **kwargs)
 
             return Response(NarrationSerializer(new_narration).data, status=status.HTTP_201_CREATED)
+
+
+class DownloadNarrationVS(APIView):
+    permission_classes = [PublicContentPermission]
+
+    def set_run_format(self, run, font_name='Arial', font_size=12, bold=False, italic=False, color=None,
+                       highlight=None):
+        run.font.name = font_name
+        run.font.size = Pt(font_size)
+        run.bold = bold
+        run.italic = italic
+        if color:
+            run.font.color.rgb = color
+        if highlight:
+            run.font.highlight_color = highlight
+
+    def create_story_docx(self, story):
+        doc = Document()
+        doc.add_heading(story.name, level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+        # Add title
+        title_run = doc.add_paragraph().add_run(story.name)
+        self.set_run_format(title_run, font_size=16, bold=True, color=RGBColor(0, 0, 255))
+
+        # Add content
+        content_run = doc.add_paragraph().add_run(story.content)
+        self.set_run_format(content_run, font_size=12, color=RGBColor(0, 0, 0))
+
+        # Add footnotes
+        footnote_run = doc.add_paragraph().add_run(f"Footnotes: {story.footnotes}")
+        self.set_run_format(footnote_run, font_size=10, italic=True, color=RGBColor(128, 128, 128))
+
+        # Add tags
+        # tags_run = doc.add_paragraph().add_run(f"Tags: {', '.join(story.tags)}")
+        # self.set_run_format(tags_run, font_size=10, italic=True, color="FF0000")
+
+        # Add page numbers
+        section = doc.sections[0]
+        footer = section.footer
+        paragraph = footer.paragraphs[0]
+        paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        page_num_run = paragraph.add_run()
+        fldChar = OxmlElement('w:fldChar')
+        fldChar.set(qn('w:fldCharType'), 'begin')
+        instrText = OxmlElement('w:instrText')
+        instrText.text = "PAGE"
+        fldChar2 = OxmlElement('w:fldChar')
+        fldChar2.set(qn('w:fldCharType'), 'end')
+        page_num_run._r.append(fldChar)
+        page_num_run._r.append(instrText)
+        page_num_run._r.append(fldChar2)
+
+        # Save the document to a BytesIO object
+        doc_io = BytesIO()
+        doc.save(doc_io)
+        doc_io.seek(0)
+
+        return doc_io
+
+    def get(self, request):
+        narration_ids_str = request.query_params.get('ids', None)
+        if len(narration_ids_str):
+            narration_ids_list = narration_ids_str.split(',')
+            stories = Narration.objects.filter(pk__in=narration_ids_list)
+        else:
+            stories = Narration.objects.all()
+
+        zip_io = BytesIO()
+
+        with ZipFile(zip_io, 'w') as zip_file:
+            for index, story in enumerate(stories):
+                doc_io = self.create_story_docx(story)
+                filename = f"{index + 1}- {story.name}.docx"
+                zip_file.writestr(filename, doc_io.getvalue())
+
+        zip_io.seek(0)
+        response = HttpResponse(zip_io, content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="stories.zip"'
+
+        return response

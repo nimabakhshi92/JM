@@ -62,5 +62,6 @@ urlpatterns = [
          name='duplicate_narration'),
     path('api/move_narration_to_main_site/<int:narration_id>/', viewsets.MoveToMainSiteNarrationVS.as_view(),
          name='move_narration_to_main_site'),
+    path('api/download_narrations/', viewsets.DownloadNarrationVS.as_view(), name='download_narrations'),
 
 ]
