@@ -1074,5 +1074,7 @@ class HeavySpeedTestVS(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
+        b = Book.objects.first()
+        c = b.name
         return Response(data=heavy_ready_response, status=status.HTTP_200_OK)
 
