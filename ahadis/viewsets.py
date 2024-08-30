@@ -1069,12 +1069,10 @@ class SpeedTestVS(APIView):
         return Response(data=ready_response, status=status.HTTP_200_OK)
 
 
-class HeavySpeedTestVS2(APIView):
+class HeavySpeedTestVS(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        b = Book.objects.first()
-        c = b.name
         return Response(data=heavy_ready_response, status=status.HTTP_200_OK)
 
 
@@ -1088,9 +1086,9 @@ class HeavySpeedTestVS2(APIView):
     #     serializer = NarrationSubjectListSerializer({'subjects': subjects})
     #     return Response(serializer.data)
 
-class HeavySpeedTestVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-             viewsets.GenericViewSet):
-    permission_classes = [PublicContentPermission]
-
-    def list(self, request, *args, **kwargs):
-        return Response(heavy_ready_response)
+# class HeavySpeedTestVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+#              viewsets.GenericViewSet):
+#     permission_classes = [PublicContentPermission]
+#
+#     def list(self, request, *args, **kwargs):
+#         return Response(heavy_ready_response)
