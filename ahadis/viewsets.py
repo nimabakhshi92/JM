@@ -1070,11 +1070,16 @@ class SpeedTestVS(APIView):
         return Response(data=ready_response, status=status.HTTP_200_OK)
 
 
-class HeavySpeedTestVS(APIView):
+class HeavySpeedTestVS2(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         b = Book.objects.first()
         c = b.name
         return Response(data=heavy_ready_response, status=status.HTTP_200_OK)
+
+class HeavySpeedTestVS(generics.ListAPIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    serializer_class = BookSerializer
+    queryset = Book.objects.filter(pk=1)
 
