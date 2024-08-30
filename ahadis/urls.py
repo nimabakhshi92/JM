@@ -17,7 +17,7 @@ router.register('footnote', viewsets.NarrationFootnoteVS)
 router.register('summary_tree', viewsets.ContentSummaryTreeVS)
 router.register('bookmark', viewsets.BookmarkVS, basename='bookmark')
 router.register('shared_narrations', viewsets.SharedNarrationsVS, basename='shared_narrations')
-router.register('heavy_speed_test', viewsets.HeavySpeedTestVS, basename='heavy_speed_test')
+router.register('heavy_speed_test2', viewsets.HeavySpeedTestVS, basename='heavy_speed_test2')
 
 # router.register('narration1', viewsets.Narration1VS, basename='narration1')
 # router.register('table_of_contents', viewsets.ContentSummaryTree1VS, basename='table_of_contents')
