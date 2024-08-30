@@ -1091,9 +1091,6 @@ class HeavySpeedTestVS2(APIView):
 class HeavySpeedTestVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
              viewsets.GenericViewSet):
     permission_classes = [PublicContentPermission]
-    serializer_class = BookSerializer
-    queryset = Book.objects.all()
 
     def list(self, request, *args, **kwargs):
-        subjects =  Book.objects.filter(pk=1)
         return Response(heavy_ready_response)
