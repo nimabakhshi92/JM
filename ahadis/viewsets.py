@@ -1,3 +1,4 @@
+from .resp import *
 import copy
 import datetime
 from env import *
@@ -21,12 +22,13 @@ from rest_framework.response import Response
 from django.http import HttpResponse
 from docx import Document
 from io import BytesIO
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 from docx.shared import Pt, RGBColor
 from docx.oxml import OxmlElement
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT, WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
-
+import os
+import re
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                               mixins.DestroyModelMixin, mixins.ListModelMixin):
@@ -869,7 +871,7 @@ class DownloadNarrationVS(APIView):
         if highlight:
             run.font.highlight_color = highlight
 
-    def create_story_docx(self, story):
+    def create_narration_docx(self, story):
         doc = Document()
         doc.add_heading(story.name, level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
@@ -878,8 +880,9 @@ class DownloadNarrationVS(APIView):
         self.set_run_format(title_run, font_size=16, bold=True, color=RGBColor(0, 0, 255))
 
         # Add content
-        content_run = doc.add_paragraph().add_run(story.content)
-        self.set_run_format(content_run, font_size=12, color=RGBColor(0, 0, 0))
+        # content_run = doc.add_paragraph().add_run(story.content)
+        # self.set_run_format(content_run, font_size=12, color=RGBColor(0, 0, 0))
+        self.add_narration_content(doc, story.content)
 
         # Add footnotes
         footnote_run = doc.add_paragraph().add_run(f"Footnotes: {story.footnotes}")
@@ -912,24 +915,164 @@ class DownloadNarrationVS(APIView):
 
         return doc_io
 
+    def add_narration_content(self, doc, content):
+        # Define colors
+        blue_color = RGBColor(0, 0, 255)
+        black_color = RGBColor(0, 0, 0)
+        green_color = RGBColor(0, 128, 0)
+        main_text_font = "Times New Roman"
+        translation_font = "Arial"
+        expression_font = "Courier New"
+
+        # Step 1: Split the content based on "aaa"
+        segments = content.split("ظظظ")
+        is_main_text = True  # Start with the assumption that the first segment is the main text
+        rlm = chr(0x200F)
+        # Step 2: Process each segment and format it accordingly
+        for segment in segments:
+            if not segment.strip():
+                continue
+
+            if is_main_text:
+                # Create a new paragraph for the main text
+                paragraph = doc.add_paragraph()
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            else:
+                # Create a new paragraph for the translation
+                paragraph = doc.add_paragraph()
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+            # Handle text wrapped in $
+            parts = re.split(r'(\$[^$]+\$)', segment)
+            for part in parts:
+                if not part.strip():
+                    continue
+
+                # Adjust symbols within the text for RTL
+                part = re.sub(r'(\()', rf'{rlm}\1', part)  # Add RLM before (
+                part = re.sub(r'(\))', rf'\1{rlm}', part)  # Add RLM after )
+                part = re.sub(r'(<<)', rf'{rlm}\1', part)  # Add RLM before <<
+                part = re.sub(r'(>>)', rf'\1{rlm}', part)  # Add RLM after >>
+
+                if part.startswith('$') and part.endswith('$'):
+                    # Text wrapped in $
+                    run = paragraph.add_run(part.strip('$'))
+                    run.font.color.rgb = green_color
+                    run.font.name = expression_font
+                else:
+                    # Main text or translation
+                    run = paragraph.add_run(part)
+                    run.font.color.rgb = blue_color if is_main_text else black_color
+                    run.font.name = main_text_font if is_main_text else translation_font
+
+            is_main_text = not is_main_text  # Alternate for the next segment
+
     def get(self, request):
         narration_ids_str = request.query_params.get('ids', None)
         if len(narration_ids_str):
             narration_ids_list = narration_ids_str.split(',')
-            stories = Narration.objects.filter(pk__in=narration_ids_list)
+            narrations = Narration.objects.filter(pk__in=narration_ids_list)
         else:
-            stories = Narration.objects.all()
+            narrations = Narration.objects.all()
+
+        zip_buffer = BytesIO()
+        try:
+            with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
+                parent = 'All - ' + datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+                cst_unique_list = ContentSummaryTree.objects.filter(
+                    narration__in=narrations
+                ).values(
+                    'alphabet', 'subject_1', 'subject_2'
+                ).distinct().order_by('alphabet', 'subject_1', 'subject_2')
+                for cst in cst_unique_list:
+                    uncategorized = 'دسته بندی نشده'
+                    category = cst['alphabet'] or uncategorized
+                    subcategory = cst['subject_1'] or uncategorized
+                    subsubcategory = cst['subject_2'] or uncategorized
+
+                    cst_narrations_id = narrations.filter(
+                        content_summary_tree__alphabet=cst['alphabet'],
+                        content_summary_tree__subject_1=cst['subject_1'],
+                        content_summary_tree__subject_2=cst['subject_2']
+                    ).values('id').distinct()
+
+                    for index, narration_id in enumerate(cst_narrations_id):
+                        narration = Narration.objects.get(pk=narration_id['id'])
+                        doc_io = self.create_narration_docx(narration)
+
+                        folder_path = os.path.join(parent, category, subcategory, subsubcategory)
+                        filename = f"{str(index + 10001)[1:]}- {narration.name}.docx"
+                        # filename = f"{index + 1}- narration.name.docx"
+                        file_path_in_zip = os.path.join(folder_path, filename)
+
+                        zip_file.writestr(file_path_in_zip, doc_io.getvalue())
+
+            # Set the buffer position to the beginning
+            zip_buffer.seek(0)
+
+            # Prepare the HttpResponse with the ZIP file content
+            response = HttpResponse(zip_buffer, content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename=stories.zip'
+
+            return response
+        except:
+            return HttpResponse(status=500)
+        finally:
+        # Close the buffer explicitly if necessary
+           zip_buffer.close()
+
+    def get2(self,request):
+        narration_ids_str = request.query_params.get('ids', None)
+        if len(narration_ids_str):
+            narration_ids_list = narration_ids_str.split(',')
+            narrations = Narration.objects.filter(pk__in=narration_ids_list)
+        else:
+            narrations = Narration.objects.all()
 
         zip_io = BytesIO()
 
         with ZipFile(zip_io, 'w') as zip_file:
-            for index, story in enumerate(stories):
-                doc_io = self.create_story_docx(story)
-                filename = f"{index + 1}- {story.name}.docx"
+            for story in narrations:
+                doc_io = self.create_narration_docx(story)
+                filename = f"{story.name}.docx"
                 zip_file.writestr(filename, doc_io.getvalue())
-
         zip_io.seek(0)
-        response = HttpResponse(zip_io, content_type='application/zip')
+        response = HttpResponse(zip_io, content_type='application/x-zip-compressed')
         response['Content-Disposition'] = 'attachment; filename="stories.zip"'
 
         return response
+
+    def get2(self,request):
+        """Download archive zip file of code snippets"""
+        response = HttpResponse(content_type='application/zip')
+        zf = ZipFile(response, 'w')
+
+        # create the zipfile in memory using writestr
+        # add a readme
+        zf.writestr('README_NAME', 'README_CONTENT')
+
+        # retrieve snippets from ORM and them to zipfile
+        # scripts = Script.objects.all()
+        # for snippet in scripts:
+        #     zf.writestr(snippet.name, snippet.code)
+
+        # return as zipfile
+        response['Content-Disposition'] = f'attachment; filename="stories.zip"'
+        return response
+
+
+
+
+class SpeedTestVS(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        return Response(data=ready_response, status=status.HTTP_200_OK)
+
+
+class HeavySpeedTestVS(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        return Response(data=heavy_ready_response, status=status.HTTP_200_OK)
+

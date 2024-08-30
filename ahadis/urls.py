@@ -63,5 +63,6 @@ urlpatterns = [
     path('api/move_narration_to_main_site/<int:narration_id>/', viewsets.MoveToMainSiteNarrationVS.as_view(),
          name='move_narration_to_main_site'),
     path('api/download_narrations/', viewsets.DownloadNarrationVS.as_view(), name='download_narrations'),
-
+    path('api/speed_test/', viewsets.SpeedTestVS.as_view(), name='speed_test'),
+    path('api/heavy_speed_test/', viewsets.HeavySpeedTestVS.as_view(), name='heavy_speed_test'),
 ]
