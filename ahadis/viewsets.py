@@ -30,6 +30,7 @@ from docx.oxml.ns import qn
 import os
 import re
 
+
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                               mixins.DestroyModelMixin, mixins.ListModelMixin):
     pass
@@ -1018,10 +1019,10 @@ class DownloadNarrationVS(APIView):
         except:
             return HttpResponse(status=500)
         finally:
-        # Close the buffer explicitly if necessary
-           zip_buffer.close()
+            # Close the buffer explicitly if necessary
+            zip_buffer.close()
 
-    def get2(self,request):
+    def get2(self, request):
         narration_ids_str = request.query_params.get('ids', None)
         if len(narration_ids_str):
             narration_ids_list = narration_ids_str.split(',')
@@ -1042,7 +1043,7 @@ class DownloadNarrationVS(APIView):
 
         return response
 
-    def get2(self,request):
+    def get2(self, request):
         """Download archive zip file of code snippets"""
         response = HttpResponse(content_type='application/zip')
         zf = ZipFile(response, 'w')
@@ -1061,8 +1062,6 @@ class DownloadNarrationVS(APIView):
         return response
 
 
-
-
 class SpeedTestVS(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -1078,8 +1077,13 @@ class HeavySpeedTestVS2(APIView):
         c = b.name
         return Response(data=heavy_ready_response, status=status.HTTP_200_OK)
 
-class HeavySpeedTestVS(generics.ListAPIView):
+
+class HeavySpeedTestVS(viewsets.GenericViewSet, mixins.ListModelMixin, ):
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = BookSerializer
     queryset = Book.objects.filter(pk=1)
 
+    # def list(self, request, *args, **kwargs):
+    #     subjects =  Book.objects.filter(pk=1)
+    #     serializer = NarrationSubjectListSerializer({'subjects': subjects})
+    #     return Response(serializer.data)
