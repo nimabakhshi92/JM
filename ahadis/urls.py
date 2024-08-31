@@ -17,6 +17,7 @@ router.register('footnote', viewsets.NarrationFootnoteVS)
 router.register('summary_tree', viewsets.ContentSummaryTreeVS)
 router.register('bookmark', viewsets.BookmarkVS, basename='bookmark')
 router.register('shared_narrations', viewsets.SharedNarrationsVS, basename='shared_narrations')
+router.register('download_narrations_backup', viewsets.DownloadNarrationBackupVS, basename='download_narrations_backup')
 # router.register('heavy_speed_test2', viewsets.HeavySpeedTestVS, basename='heavy_speed_test2')
 
 # router.register('narration1', viewsets.Narration1VS, basename='narration1')
@@ -64,6 +65,6 @@ urlpatterns = [
     path('api/move_narration_to_main_site/<int:narration_id>/', viewsets.MoveToMainSiteNarrationVS.as_view(),
          name='move_narration_to_main_site'),
     path('api/download_narrations/', viewsets.DownloadNarrationVS.as_view(), name='download_narrations'),
-    path('api/speed_test/', viewsets.SpeedTestVS.as_view(), name='speed_test'),
-    path('api/heavy_speed_test2/', viewsets.HeavySpeedTestVS.as_view(), name='heavy_speed_test2'),
+    # path('api/speed_test/', viewsets.SpeedTestVS.as_view(), name='speed_test'),
+    # path('api/heavy_speed_test2/', viewsets.HeavySpeedTestVS.as_view(), name='heavy_speed_test2'),
 ]

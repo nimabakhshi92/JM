@@ -427,7 +427,7 @@ class SharedNarrationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SharedNarrations
         fields = ['id', 'narration', 'narration_id', 'status', 'sender', 'sender_id', 'receiver_id',
-                  'created', 'receiver_narration']
+                  'created', 'receiver_narration', 'modified']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -436,9 +436,9 @@ class SharedNarrationsSerializer(serializers.ModelSerializer):
         if request and request.method == 'GET':
             user = request.user
             if is_a_non_checker_admin(user):
-                allowed_fields = ['id', 'narration', 'status', 'created']
+                allowed_fields = ['id', 'narration', 'status', 'created', 'modified']
             elif is_checker_admin(user):
-                allowed_fields = ['id', 'narration', 'status', 'sender', 'created', 'receiver_narration']
+                allowed_fields = ['id', 'narration', 'status', 'sender', 'created', 'receiver_narration', 'modified']
             else:
                 allowed_fields = []
 

@@ -1,4 +1,4 @@
-from .resp import *
+# from .resp import *
 import copy
 import datetime
 from env import *
@@ -19,7 +19,7 @@ from django.db import transaction
 from .enums import *
 
 from rest_framework.response import Response
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound, FileResponse
 from docx import Document
 from io import BytesIO
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -29,6 +29,7 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT, WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 import os
 import re
+from django.conf import settings
 
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
@@ -859,6 +860,21 @@ class MoveToMainSiteNarrationVS(APIView):
 
 
 class DownloadNarrationVS(APIView):
+    content_color = RGBColor(16, 40, 190)
+    translation_color = RGBColor(0, 0, 0)
+    narrator_color = RGBColor(165, 45, 45)
+    verse_color = RGBColor(14, 130, 8)
+    name_color = RGBColor(255, 0, 0)
+    address_color = RGBColor(160, 160, 160)
+
+    general_font = "B Mitra"
+    main_text_font = general_font
+    translation_font = general_font
+    expression_font = general_font
+    name_font = general_font
+    address_font = general_font
+    narrator_font = general_font
+
     permission_classes = [PublicContentPermission]
 
     def set_run_format(self, run, font_name='Arial', font_size=12, bold=False, italic=False, color=None,
@@ -867,6 +883,7 @@ class DownloadNarrationVS(APIView):
         run.font.size = Pt(font_size)
         run.bold = bold
         run.italic = italic
+        run.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
         if color:
             run.font.color.rgb = color
         if highlight:
@@ -874,11 +891,33 @@ class DownloadNarrationVS(APIView):
 
     def create_narration_docx(self, story):
         doc = Document()
-        doc.add_heading(story.name, level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
         # Add title
-        title_run = doc.add_paragraph().add_run(story.name)
-        self.set_run_format(title_run, font_size=16, bold=True, color=RGBColor(0, 0, 255))
+        title_run = doc.add_paragraph()
+        title_run.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+        title_run = title_run.add_run(story.name)
+        self.set_run_format(title_run, font_name=self.name_font, font_size=16, bold=True, color=self.name_color)
+
+        vol_no_persian_name = 'جلد'
+        book_vol_no = f'{vol_no_persian_name} {story.book_vol_no}' if story.book_vol_no else " "
+
+        page_persian_name = 'صفحه'
+        book_page = f'{page_persian_name} {story.book_page_no}' if story.book_page_no else " "
+        narration_address = story.book.name + ' ' + book_vol_no + ' ' + book_page
+        address_run = doc.add_paragraph()
+        address_run.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+        address_run = address_run.add_run(narration_address)
+        # address_run.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        # address_run.add_run(narration_address)
+        self.set_run_format(address_run, font_name=self.address_font, font_size=10, bold=False,
+                            color=self.address_color)
+
+        # Add narrator
+        narrator_run = doc.add_paragraph()
+        narrator_run.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+        narrator_run = narrator_run.add_run(story.narrator.replace('#', ''))
+        self.set_run_format(narrator_run, font_name=self.narrator_font, font_size=10, bold=False,
+                            color=self.narrator_color)
 
         # Add content
         # content_run = doc.add_paragraph().add_run(story.content)
@@ -886,8 +925,8 @@ class DownloadNarrationVS(APIView):
         self.add_narration_content(doc, story.content)
 
         # Add footnotes
-        footnote_run = doc.add_paragraph().add_run(f"Footnotes: {story.footnotes}")
-        self.set_run_format(footnote_run, font_size=10, italic=True, color=RGBColor(128, 128, 128))
+        # footnote_run = doc.add_paragraph().add_run(f"Footnotes: {story.footnotes}")
+        # self.set_run_format(footnote_run, font_size=10, italic=True, color=RGBColor(128, 128, 128))
 
         # Add tags
         # tags_run = doc.add_paragraph().add_run(f"Tags: {', '.join(story.tags)}")
@@ -918,15 +957,28 @@ class DownloadNarrationVS(APIView):
 
     def add_narration_content(self, doc, content):
         # Define colors
-        blue_color = RGBColor(0, 0, 255)
-        black_color = RGBColor(0, 0, 0)
-        green_color = RGBColor(0, 128, 0)
-        main_text_font = "Times New Roman"
-        translation_font = "Arial"
-        expression_font = "Courier New"
+        content = content.replace('(', 'EEEEEE')
+        content = content.replace(')', '333333')
+
+        content = content.replace('«', 'DDDDDD')
+        content = content.replace('»', 'JJJJJJ')
+
+        content = content.replace('333333', '(')
+        content = content.replace('EEEEEE', ')')
+
+        content = content.replace('DDDDDD', '»')
+        content = content.replace('JJJJJJ', '«')
+
+        blue_color = self.content_color
+        black_color = self.translation_color
+        green_color = self.verse_color
+
+        main_text_font = self.main_text_font
+        translation_font = self.translation_font
+        expression_font = self.expression_font
 
         # Step 1: Split the content based on "aaa"
-        segments = content.split("ظظظ")
+        segments = content.replace('@', ' ').split("ظظظ")
         is_main_text = True  # Start with the assumption that the first segment is the main text
         rlm = chr(0x200F)
         # Step 2: Process each segment and format it accordingly
@@ -950,25 +1002,27 @@ class DownloadNarrationVS(APIView):
                     continue
 
                 # Adjust symbols within the text for RTL
-                part = re.sub(r'(\()', rf'{rlm}\1', part)  # Add RLM before (
-                part = re.sub(r'(\))', rf'\1{rlm}', part)  # Add RLM after )
-                part = re.sub(r'(<<)', rf'{rlm}\1', part)  # Add RLM before <<
-                part = re.sub(r'(>>)', rf'\1{rlm}', part)  # Add RLM after >>
+                # part = re.sub(r'(\()', rf'{rlm}\1', part)  # Add RLM before (
+                # part = re.sub(r'(\))', rf'\1{rlm}', part)  # Add RLM after )
+                # part = re.sub(r'(<<)', rf'{rlm}\1', part)  # Add RLM before <<
+                # part = re.sub(r'(>>)', rf'\1{rlm}', part)  # Add RLM after >>
 
                 if part.startswith('$') and part.endswith('$'):
                     # Text wrapped in $
                     run = paragraph.add_run(part.strip('$'))
                     run.font.color.rgb = green_color
                     run.font.name = expression_font
+                    run.font.size = Pt(14)
                 else:
                     # Main text or translation
                     run = paragraph.add_run(part)
+                    run.font.size = Pt(14) if is_main_text else Pt(12)
                     run.font.color.rgb = blue_color if is_main_text else black_color
                     run.font.name = main_text_font if is_main_text else translation_font
 
             is_main_text = not is_main_text  # Alternate for the next segment
 
-    def get(self, request):
+    def get0(self, request):
         narration_ids_str = request.query_params.get('ids', None)
         if len(narration_ids_str):
             narration_ids_list = narration_ids_str.split(',')
@@ -980,16 +1034,24 @@ class DownloadNarrationVS(APIView):
         try:
             with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
                 parent = 'All - ' + datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+                subjective_narrations = 'احادیث موضوعی'
+                verses_interpretations = 'تفاسیر آیات'
+                subjective_verses = 'آیات موضوعی'
+
                 cst_unique_list = ContentSummaryTree.objects.filter(
                     narration__in=narrations
                 ).values(
                     'alphabet', 'subject_1', 'subject_2'
                 ).distinct().order_by('alphabet', 'subject_1', 'subject_2')
                 for cst in cst_unique_list:
+                    alphabet = cst['alphabet']
+                    subject_1 = cst['subject_1']
+                    subject_2 = cst['subject_2']
+
                     uncategorized = 'دسته بندی نشده'
-                    category = cst['alphabet'] or uncategorized
-                    subcategory = cst['subject_1'] or uncategorized
-                    subsubcategory = cst['subject_2'] or uncategorized
+                    category = alphabet or uncategorized
+                    subcategory = subject_1 or uncategorized
+                    subsubcategory = subject_2 or uncategorized
 
                     cst_narrations_id = narrations.filter(
                         content_summary_tree__alphabet=cst['alphabet'],
@@ -1003,10 +1065,10 @@ class DownloadNarrationVS(APIView):
 
                         folder_path = os.path.join(parent, category, subcategory, subsubcategory)
                         filename = f"{str(index + 10001)[1:]}- {narration.name}.docx"
-                        # filename = f"{index + 1}- narration.name.docx"
                         file_path_in_zip = os.path.join(folder_path, filename)
-
                         zip_file.writestr(file_path_in_zip, doc_io.getvalue())
+
+                        narration_cst = narration.content_summary_tree
 
             # Set the buffer position to the beginning
             zip_buffer.seek(0)
@@ -1022,7 +1084,7 @@ class DownloadNarrationVS(APIView):
             # Close the buffer explicitly if necessary
             zip_buffer.close()
 
-    def get2(self, request):
+    def get(self, request):
         narration_ids_str = request.query_params.get('ids', None)
         if len(narration_ids_str):
             narration_ids_list = narration_ids_str.split(',')
@@ -1030,61 +1092,143 @@ class DownloadNarrationVS(APIView):
         else:
             narrations = Narration.objects.all()
 
-        zip_io = BytesIO()
+        zip_buffer = BytesIO()
+        try:
+            with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
+                parent = 'All - ' + datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+                subjective_narrations = 'احادیث موضوعی'
+                verses_interpretations = 'تفاسیر آیات'
+                subjective_verses = 'آیات موضوعی'
+                uncategorized = 'دسته بندی نشده'
+                bayan = 'بیان'
 
-        with ZipFile(zip_io, 'w') as zip_file:
-            for story in narrations:
-                doc_io = self.create_narration_docx(story)
-                filename = f"{story.name}.docx"
-                zip_file.writestr(filename, doc_io.getvalue())
-        zip_io.seek(0)
-        response = HttpResponse(zip_io, content_type='application/x-zip-compressed')
-        response['Content-Disposition'] = 'attachment; filename="stories.zip"'
+                for index, narration in enumerate(narrations):
+                    try:
+                        doc_io = self.create_narration_docx(narration)
+                        all_cst = narration.content_summary_tree.all()
+                        if not len(all_cst):
+                            folder_path = os.path.join(parent, uncategorized)
+                            filename = f"{str(index + 10001)[1:]}- {narration.name}.docx"
+                            file_path_in_zip = os.path.join(folder_path, filename)
+                            zip_file.writestr(file_path_in_zip, doc_io.getvalue())
+                            continue
 
-        return response
+                        processed_csts = []
+                        verse_processed_csts = []
+                        bayan_processed_csts = []
+                        for cst in all_cst:
+                            try:
+                                alphabet = cst.alphabet
+                                subject_1 = cst.subject_1
+                                subject_2 = cst.subject_2
 
-    def get2(self, request):
-        """Download archive zip file of code snippets"""
-        response = HttpResponse(content_type='application/zip')
-        zf = ZipFile(response, 'w')
+                                category = alphabet or uncategorized
+                                subcategory = subject_1 or uncategorized
+                                subsubcategory = subject_2 or uncategorized
 
-        # create the zipfile in memory using writestr
-        # add a readme
-        zf.writestr('README_NAME', 'README_CONTENT')
+                                category = category[:50]
+                                subcategory = subcategory[:50]
+                                subsubcategory = subsubcategory[:50]
+                                filename = f"{str(index + 100001)[1:]}- {narration.name[:50]}.docx"
 
-        # retrieve snippets from ORM and them to zipfile
-        # scripts = Script.objects.all()
-        # for snippet in scripts:
-        #     zf.writestr(snippet.name, snippet.code)
+                                if not ([alphabet, subject_1, subject_2] in processed_csts) and not (alphabet == bayan):
+                                    folder_path = os.path.join(parent, subjective_narrations, category, subcategory,
+                                                               subsubcategory)
+                                    file_path_in_zip = os.path.join(folder_path, filename)
+                                    zip_file.writestr(file_path_in_zip, doc_io.getvalue())
+                                    processed_csts.append([alphabet, subject_1, subject_2])
 
-        # return as zipfile
-        response['Content-Disposition'] = f'attachment; filename="stories.zip"'
-        return response
+                                has_verse = hasattr(cst, 'verse')
+
+                                if not has_verse:
+                                    continue
+
+                                if not ([alphabet, subject_1, subject_2] in verse_processed_csts) and not (
+                                        alphabet == bayan):
+                                    folder_path = os.path.join(parent, subjective_verses, category, subcategory,
+                                                               subsubcategory)
+                                    file_path_in_zip = os.path.join(folder_path, filename)
+                                    zip_file.writestr(file_path_in_zip, doc_io.getvalue())
+                                    verse_processed_csts.append([alphabet, subject_1, subject_2])
+
+                                if not alphabet == bayan:
+                                    continue
+
+                                quran_verse = cst.verse.quran_verse
+
+                                surah_name = quran_verse.surah_name
+                                surah_no = quran_verse.surah_no
+                                surah_desc = f'{surah_no}- {surah_name}'
+
+                                verse_no = quran_verse.verse_no
+                                verse_content = quran_verse.verse_content
+                                verse_desc = f'{verse_no}- {verse_content[:40]}'
+
+                                if not ([alphabet, surah_name, verse_no] in bayan_processed_csts):
+                                    folder_path = os.path.join(parent, verses_interpretations, surah_desc,
+                                                               verse_desc)
+                                    file_path_in_zip = os.path.join(folder_path, filename)
+                                    zip_file.writestr(file_path_in_zip, doc_io.getvalue())
+                                    bayan_processed_csts.append([alphabet, surah_name, verse_no])
+                            except:
+                                pass
+                    except:
+                        pass
+
+            # Set the buffer position to the beginning
+            zip_buffer.seek(0)
+
+            # Prepare the HttpResponse with the ZIP file content
+            response = HttpResponse(zip_buffer, content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename=stories.zip'
+
+            return response
+        except:
+            return HttpResponse(status=500)
+        finally:
+            # Close the buffer explicitly if necessary
+            zip_buffer.close()
 
 
-class SpeedTestVS(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+class DownloadNarrationBackupVS(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin, ):
+    def list(self, request, *args, **kwargs):
+        folder_path = os.path.join( 'zipBackup')
+        return Response([os.listdir(folder_path)[-1]], status=status.HTTP_200_OK)
 
-    def get(self, request):
-        return Response(data=ready_response, status=status.HTTP_200_OK)
+    def retrieve(self, request, *args, **kwargs):
+        folder_path = os.path.join( 'zipBackup')
+        all_files = os.listdir(folder_path)
+        all_files.sort()
+        filename = all_files[-1]
+        file_path = os.path.join('zipBackup', filename)
+        if os.path.exists(file_path):
+            return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=filename)
+        else:
+            return HttpResponseNotFound('File not found')
 
-
-class HeavySpeedTestVS(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get(self, request):
-        return Response(data=heavy_ready_response, status=status.HTTP_200_OK)
-
+# class SpeedTestVS(APIView):
+#     permission_classes = [IsAuthenticatedOrReadOnly]
+#
+#     def get(self, request):
+#         return Response(data=ready_response, status=status.HTTP_200_OK)
+#
+#
+# class HeavySpeedTestVS(APIView):
+#     permission_classes = [IsAuthenticatedOrReadOnly]
+#
+#     def get(self, request):
+#         return Response(data=heavy_ready_response, status=status.HTTP_200_OK)
+#
 
 # class HeavySpeedTestVS(viewsets.GenericViewSet, mixins.ListModelMixin, ):
 #     permission_classes = [IsAuthenticatedOrReadOnly]
 #     serializer_class = BookSerializer
 #     queryset = Book.objects.filter(pk=1)
 
-    # def list(self, request, *args, **kwargs):
-    #     subjects =  Book.objects.filter(pk=1)
-    #     serializer = NarrationSubjectListSerializer({'subjects': subjects})
-    #     return Response(serializer.data)
+# def list(self, request, *args, **kwargs):
+#     subjects =  Book.objects.filter(pk=1)
+#     serializer = NarrationSubjectListSerializer({'subjects': subjects})
+#     return Response(serializer.data)
 
 # class HeavySpeedTestVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 #              viewsets.GenericViewSet):
