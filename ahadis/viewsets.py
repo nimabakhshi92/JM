@@ -1,6 +1,7 @@
 # from .resp import *
 import copy
 import datetime
+import jdatetime
 from env import *
 from .models import *
 from .serializers import *
@@ -17,7 +18,7 @@ from django.db.models import Count, Q, Prefetch, F
 from django.db.models.functions import Greatest
 from django.db import transaction
 from .enums import *
-
+from .services import *
 from rest_framework.response import Response
 from django.http import HttpResponse, HttpResponseNotFound, FileResponse
 from docx import Document
@@ -434,12 +435,7 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
         queryset = Narration.objects.all()
 
         if self.action == 'retrieve' or self.action == 'list':
-            if request_user.id == user_id:
-                queryset = queryset.filter(models.Q(owner__id=user_id))
-            elif user_id == -1:
-                queryset = queryset.filter(models.Q(owner__is_superuser=True) | models.Q(owner=None))
-            else:
-                queryset = queryset.none()
+            queryset = filter_out_forbidden_queryset_items(queryset, request_user.id, user_id)
         if alphabet:
             queryset = queryset.filter(content_summary_tree__alphabet=alphabet).distinct()
         if subject:
@@ -866,6 +862,7 @@ class DownloadNarrationVS(APIView):
     verse_color = RGBColor(14, 130, 8)
     name_color = RGBColor(255, 0, 0)
     address_color = RGBColor(160, 160, 160)
+    tags_color = verse_color
 
     general_font = "B Mitra"
     main_text_font = general_font
@@ -874,6 +871,7 @@ class DownloadNarrationVS(APIView):
     name_font = general_font
     address_font = general_font
     narrator_font = general_font
+    tags_font = general_font
 
     permission_classes = [PublicContentPermission]
 
@@ -907,10 +905,18 @@ class DownloadNarrationVS(APIView):
         address_run = doc.add_paragraph()
         address_run.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
         address_run = address_run.add_run(narration_address)
-        # address_run.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        # address_run.add_run(narration_address)
         self.set_run_format(address_run, font_name=self.address_font, font_size=10, bold=False,
                             color=self.address_color)
+
+        # Add tags
+        tags_run = doc.add_paragraph()
+        tags_run.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+        subjects = story.subjects.all()
+        if len(subjects):
+            tags = '     '.join([f'#{s.subject}#' for s in subjects])
+            tags_run = tags_run.add_run(tags)
+            self.set_run_format(tags_run, font_name=self.tags_font, font_size=11, bold=True,
+                                color=self.tags_color)
 
         # Add narrator
         narrator_run = doc.add_paragraph()
@@ -919,9 +925,12 @@ class DownloadNarrationVS(APIView):
         self.set_run_format(narrator_run, font_name=self.narrator_font, font_size=10, bold=False,
                             color=self.narrator_color)
 
-        # Add content
-        # content_run = doc.add_paragraph().add_run(story.content)
-        # self.set_run_format(content_run, font_size=12, color=RGBColor(0, 0, 0))
+        # Add footnotes_list
+        # footnotes_list = []
+        # narration_footnotes = story.footnotes.all()
+        # if len(narration_footnotes):
+        #     footnotes_list = [{'expression': f.expression, 'explanation': f.explanation} for f in narration_footnotes]
+
         self.add_narration_content(doc, story.content)
 
         # Add footnotes
@@ -1001,12 +1010,6 @@ class DownloadNarrationVS(APIView):
                 if not part.strip():
                     continue
 
-                # Adjust symbols within the text for RTL
-                # part = re.sub(r'(\()', rf'{rlm}\1', part)  # Add RLM before (
-                # part = re.sub(r'(\))', rf'\1{rlm}', part)  # Add RLM after )
-                # part = re.sub(r'(<<)', rf'{rlm}\1', part)  # Add RLM before <<
-                # part = re.sub(r'(>>)', rf'\1{rlm}', part)  # Add RLM after >>
-
                 if part.startswith('$') and part.endswith('$'):
                     # Text wrapped in $
                     run = paragraph.add_run(part.strip('$'))
@@ -1022,80 +1025,26 @@ class DownloadNarrationVS(APIView):
 
             is_main_text = not is_main_text  # Alternate for the next segment
 
-    def get0(self, request):
-        narration_ids_str = request.query_params.get('ids', None)
-        if len(narration_ids_str):
-            narration_ids_list = narration_ids_str.split(',')
-            narrations = Narration.objects.filter(pk__in=narration_ids_list)
-        else:
-            narrations = Narration.objects.all()
-
-        zip_buffer = BytesIO()
-        try:
-            with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
-                parent = 'All - ' + datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-                subjective_narrations = 'احادیث موضوعی'
-                verses_interpretations = 'تفاسیر آیات'
-                subjective_verses = 'آیات موضوعی'
-
-                cst_unique_list = ContentSummaryTree.objects.filter(
-                    narration__in=narrations
-                ).values(
-                    'alphabet', 'subject_1', 'subject_2'
-                ).distinct().order_by('alphabet', 'subject_1', 'subject_2')
-                for cst in cst_unique_list:
-                    alphabet = cst['alphabet']
-                    subject_1 = cst['subject_1']
-                    subject_2 = cst['subject_2']
-
-                    uncategorized = 'دسته بندی نشده'
-                    category = alphabet or uncategorized
-                    subcategory = subject_1 or uncategorized
-                    subsubcategory = subject_2 or uncategorized
-
-                    cst_narrations_id = narrations.filter(
-                        content_summary_tree__alphabet=cst['alphabet'],
-                        content_summary_tree__subject_1=cst['subject_1'],
-                        content_summary_tree__subject_2=cst['subject_2']
-                    ).values('id').distinct()
-
-                    for index, narration_id in enumerate(cst_narrations_id):
-                        narration = Narration.objects.get(pk=narration_id['id'])
-                        doc_io = self.create_narration_docx(narration)
-
-                        folder_path = os.path.join(parent, category, subcategory, subsubcategory)
-                        filename = f"{str(index + 10001)[1:]}- {narration.name}.docx"
-                        file_path_in_zip = os.path.join(folder_path, filename)
-                        zip_file.writestr(file_path_in_zip, doc_io.getvalue())
-
-                        narration_cst = narration.content_summary_tree
-
-            # Set the buffer position to the beginning
-            zip_buffer.seek(0)
-
-            # Prepare the HttpResponse with the ZIP file content
-            response = HttpResponse(zip_buffer, content_type='application/zip')
-            response['Content-Disposition'] = 'attachment; filename=stories.zip'
-
-            return response
-        except:
-            return HttpResponse(status=500)
-        finally:
-            # Close the buffer explicitly if necessary
-            zip_buffer.close()
-
     def get(self, request):
         narration_ids_str = request.query_params.get('ids', None)
+        user_id = int(request.query_params.get('user', -1))
+        request_user = request.user
+
         if len(narration_ids_str):
             narration_ids_list = narration_ids_str.split(',')
             narrations = Narration.objects.filter(pk__in=narration_ids_list)
         else:
             narrations = Narration.objects.all()
 
+        narrations = filter_out_forbidden_queryset_items(narrations, request_user.id, user_id)
+
+        if not len(narrations):
+            return HttpResponse(status=404)
+
         zip_buffer = BytesIO()
         try:
             with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
-                parent = 'All - ' + datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+                parent = f'All- {jdatetime.datetime.now().strftime("%Y-%m-%d---%H-%M-%S")}'
                 subjective_narrations = 'احادیث موضوعی'
                 verses_interpretations = 'تفاسیر آیات'
                 subjective_verses = 'آیات موضوعی'
@@ -1108,7 +1057,8 @@ class DownloadNarrationVS(APIView):
                         all_cst = narration.content_summary_tree.all()
                         if not len(all_cst):
                             folder_path = os.path.join(parent, uncategorized)
-                            filename = f"{str(index + 10001)[1:]}- {narration.name}.docx"
+                            narration_name = narration.name.replace('/', ' ').replace('\\', ' ')
+                            filename = f"{str(index + 10001)[1:]}- {narration_name}.docx"
                             file_path_in_zip = os.path.join(folder_path, filename)
                             zip_file.writestr(file_path_in_zip, doc_io.getvalue())
                             continue
@@ -1172,8 +1122,8 @@ class DownloadNarrationVS(APIView):
                                     bayan_processed_csts.append([alphabet, surah_name, verse_no])
                             except:
                                 pass
-                    except:
-                        pass
+                    except Exception as e:
+                        print(e)
 
             # Set the buffer position to the beginning
             zip_buffer.seek(0)
@@ -1192,11 +1142,11 @@ class DownloadNarrationVS(APIView):
 
 class DownloadNarrationBackupVS(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin, ):
     def list(self, request, *args, **kwargs):
-        folder_path = os.path.join( 'zipBackup')
+        folder_path = os.path.join('zipBackup')
         return Response([os.listdir(folder_path)[-1]], status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
-        folder_path = os.path.join( 'zipBackup')
+        folder_path = os.path.join('zipBackup')
         all_files = os.listdir(folder_path)
         all_files.sort()
         filename = all_files[-1]
