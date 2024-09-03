@@ -1,7 +1,7 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAuthenticatedOrReadOnly, IsAuthenticated, \
     IsAdminUser
 from .models import *
-from env import checker_admin_id
+from env import checker_admin_id, taggers_admin_ids
 
 MODIFY_METHODS = ('DELETE', 'PATCH', 'PUT')
 
@@ -12,6 +12,10 @@ def is_superuser(user):
 
 def is_admin(user):
     return user.is_staff
+
+
+def is_tagger(user):
+    return user.id in taggers_admin_ids
 
 
 def is_only_admin(user):
@@ -26,8 +30,12 @@ def is_a_non_checker_admin(user):
     return is_admin(user) and not is_checker_admin(user)
 
 
+def is_empty_owner(owner):
+    return owner is None
+
+
 def is_superuser_and_empty_owner(user, owner):
-    return is_superuser(user) & (owner is None)
+    return is_superuser(user) & is_empty_owner(owner)
 
 
 class PublicContentPermission(BasePermission):
@@ -53,6 +61,36 @@ class NarrationPermission(BasePermission):
             narration = Narration.objects.get(id=pk)
             content_owner = narration.owner
             return (request_user == content_owner) | is_superuser_and_empty_owner(request_user, content_owner)
+        return False
+
+
+class NarrationSubjectPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return NarrationPermission().has_permission(request, view)
+        if request.method in ['PATCH', 'PUT']:
+            return False
+
+        request_user = request.user
+        if request.method == 'POST':
+            narration_id = request.data.get('narration')
+            narration = Narration.objects.get(id=narration_id)
+            content_owner = narration.owner
+            return (
+                    (request_user == content_owner)
+                    | is_superuser_and_empty_owner(request_user, content_owner)
+                    | ((is_superuser(content_owner) or is_empty_owner(content_owner)) and is_tagger(request_user))
+            )
+
+        if request.method == 'DELETE':
+            pk = view.kwargs.get('pk')
+            requested_object = view.queryset.get(id=pk)
+            content_owner = requested_object.narration.owner
+            return (
+                    (request_user == content_owner)
+                    | is_superuser_and_empty_owner(request_user, content_owner)
+                    | ((is_superuser(content_owner) or is_empty_owner(content_owner)) and is_tagger(request_user))
+            )
         return False
 
 
