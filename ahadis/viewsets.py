@@ -1156,6 +1156,14 @@ class DownloadNarrationBackupVS(viewsets.GenericViewSet, mixins.RetrieveModelMix
         else:
             return HttpResponseNotFound('File not found')
 
+
+class DownloadInstructionVS(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin, ):
+    def retrieve(self, request, *args, **kwargs):
+        filename = 'Media1.mp4'
+        file_path = os.path.join('Media', filename)
+        return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=filename)
+
+
 # class SpeedTestVS(APIView):
 #     permission_classes = [IsAuthenticatedOrReadOnly]
 #

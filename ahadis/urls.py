@@ -18,6 +18,7 @@ router.register('summary_tree', viewsets.ContentSummaryTreeVS)
 router.register('bookmark', viewsets.BookmarkVS, basename='bookmark')
 router.register('shared_narrations', viewsets.SharedNarrationsVS, basename='shared_narrations')
 router.register('download_narrations_backup', viewsets.DownloadNarrationBackupVS, basename='download_narrations_backup')
+router.register('download_instruction', viewsets.DownloadInstructionVS, basename='download_instruction')
 # router.register('heavy_speed_test2', viewsets.HeavySpeedTestVS, basename='heavy_speed_test2')
 
 # router.register('narration1', viewsets.Narration1VS, basename='narration1')
