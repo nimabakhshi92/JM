@@ -909,10 +909,10 @@ class DownloadNarrationVS(APIView):
                             color=self.address_color)
 
         # Add tags
-        tags_run = doc.add_paragraph()
-        tags_run.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
         subjects = story.subjects.all()
         if len(subjects):
+            tags_run = doc.add_paragraph()
+            tags_run.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
             tags = '     '.join([f'#{s.subject}#' for s in subjects])
             tags_run = tags_run.add_run(tags)
             self.set_run_format(tags_run, font_name=self.tags_font, font_size=11, bold=True,
@@ -1052,12 +1052,12 @@ class DownloadNarrationVS(APIView):
                 bayan = 'بیان'
 
                 for index, narration in enumerate(narrations):
+                    narration_name = narration.name.replace('/', ' ').replace('\\', ' ')[:50]
                     try:
                         doc_io = self.create_narration_docx(narration)
                         all_cst = narration.content_summary_tree.all()
                         if not len(all_cst):
                             folder_path = os.path.join(parent, uncategorized)
-                            narration_name = narration.name.replace('/', ' ').replace('\\', ' ')
                             filename = f"{str(index + 10001)[1:]}- {narration_name}.docx"
                             file_path_in_zip = os.path.join(folder_path, filename)
                             zip_file.writestr(file_path_in_zip, doc_io.getvalue())
@@ -1076,10 +1076,10 @@ class DownloadNarrationVS(APIView):
                                 subcategory = subject_1 or uncategorized
                                 subsubcategory = subject_2 or uncategorized
 
-                                category = category[:50]
-                                subcategory = subcategory[:50]
-                                subsubcategory = subsubcategory[:50]
-                                filename = f"{str(index + 100001)[1:]}- {narration.name[:50]}.docx"
+                                category = category.replace('/', ' ').replace('\\', ' ')[:50]
+                                subcategory = subcategory.replace('/', ' ').replace('\\', ' ')[:50]
+                                subsubcategory = subsubcategory.replace('/', ' ').replace('\\', ' ')[:50]
+                                filename = f"{str(index + 100001)[1:]}- {narration_name}.docx"
 
                                 if not ([alphabet, subject_1, subject_2] in processed_csts) and not (alphabet == bayan):
                                     folder_path = os.path.join(parent, subjective_narrations, category, subcategory,
