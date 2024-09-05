@@ -178,12 +178,11 @@ from datetime import datetime
 # Function to get the directory path for logs with nested folders
 def get_hourly_log_file_path():
     base_dir = os.path.join( 'logs')
-    if not os.path.exists(base_dir):
-        os.makedirs(base_dir)  # Create base directory if not exists
-    today_dir = os.path.join(base_dir, datetime.now().strftime('%Y/%m/%d'))
+    today_dir = os.path.join(base_dir, datetime.now().strftime('%Y-%m-%d'))
     if not os.path.exists(today_dir):
         os.makedirs(today_dir)  # Create date-based directory if not exists
-    return os.path.join(today_dir, 'request.log')
+    now_time =  datetime.now().strftime('%H%M%S')
+    return os.path.join(today_dir, f'log{now_time}.log')
 
 LOGGING = {
     'version': 1,

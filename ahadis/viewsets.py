@@ -47,7 +47,7 @@ class LoggingMixin(APIView):
     def initial(self, request, *args, **kwargs):
         try:
             self.logger.debug({
-                "request": request.data,
+                "request":json.dumps(request.data)[:100],
                 "method": request.method,
                 "endpoint": request.path,
                 "user": request.user.username,
@@ -73,17 +73,17 @@ class LoggingMixin(APIView):
 
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
-                              mixins.DestroyModelMixin, mixins.ListModelMixin):
+                              mixins.DestroyModelMixin, mixins.ListModelMixin,LoggingMixin):
     pass
 
 
 class BaseCreateUpdateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
-                                mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+                                mixins.UpdateModelMixin, mixins.DestroyModelMixin,LoggingMixin):
     pass
 
 
 class BaseListCreateUpdateDestroyVS(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin,
-                                    mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+                                    mixins.UpdateModelMixin, mixins.DestroyModelMixin,LoggingMixin):
     pass
 
 
@@ -92,11 +92,12 @@ class BaseListCreateRetrieveUpdateDestroyVS(viewsets.GenericViewSet,
                                             mixins.ListModelMixin,
                                             mixins.CreateModelMixin,
                                             mixins.DestroyModelMixin,
-                                            mixins.UpdateModelMixin):
+                                            mixins.UpdateModelMixin,
+                                            LoggingMixin):
     pass
 
 
-class MyUserRegisterView(generics.CreateAPIView):
+class MyUserRegisterView(generics.CreateAPIView,):
     permission_classes = []
 
     def create(self, request, *args, **kwargs):
@@ -135,7 +136,7 @@ class MyTokenRefreshView(TokenRefreshView):
     serializer_class = MyTokenRefreshSerializer
 
 
-class TableOfContentsView(APIView):
+class TableOfContentsView(LoggingMixin):
     permission_classes = [PublicContentPermission]
 
     def get(self, request):
@@ -234,7 +235,7 @@ class TableOfContentsView(APIView):
         return Response(serializer.validated_data)
 
 
-class TableOfContentsViewNew(APIView):
+class TableOfContentsViewNew(LoggingMixin):
     permission_classes = [PublicContentPermission]
 
     def get(self, request):
@@ -299,7 +300,7 @@ class TableOfContentsViewNew(APIView):
         return Response(serializer.validated_data)
 
 
-class SurahTableOfContentsView(APIView):
+class SurahTableOfContentsView(LoggingMixin):
     permission_classes = [PublicContentPermission]
 
     def get(self, request):
@@ -405,7 +406,7 @@ class SurahTableOfContentsView(APIView):
         return Response(serializer.validated_data)
 
 
-class VersesTableOfContentsView(APIView):
+class VersesTableOfContentsView(LoggingMixin):
     permission_classes = [PublicContentPermission]
 
     def get(self, request):
@@ -611,13 +612,13 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
 
 
 class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-             viewsets.GenericViewSet):
+             viewsets.GenericViewSet,LoggingMixin):
     permission_classes = [PublicContentPermission]
     serializer_class = BookSerializer
     queryset = Book.objects.all()
 
 
-class ImamVS(mixins.ListModelMixin, viewsets.GenericViewSet):
+class ImamVS(mixins.ListModelMixin, viewsets.GenericViewSet,LoggingMixin):
     permission_classes = [IsAuthenticated]
     serializer_class = ImamSerializer
     queryset = Imam.objects.all()
@@ -634,13 +635,13 @@ class SubjectVS(BaseListCreateUpdateDestroyVS):
         return Response(serializer.data)
 
 
-class QuranSurahVS(viewsets.GenericViewSet, mixins.ListModelMixin):
+class QuranSurahVS(viewsets.GenericViewSet, mixins.ListModelMixin,LoggingMixin):
     permission_classes = [IsAuthenticated]
     serializer_class = QuranSurahSerializer
     queryset = QuranVerse.objects.values('surah_no', 'surah_name').annotate(no_of_verses=Max('verse_no'))
 
 
-class QuranVS(viewsets.GenericViewSet, mixins.ListModelMixin):
+class QuranVS(viewsets.GenericViewSet, mixins.ListModelMixin,LoggingMixin):
     permission_classes = [PublicContentPermission]
     serializer_class = QuranVerseSerializer
 
@@ -723,7 +724,7 @@ def is_similar(expression, content, tolerance):
     return similarity_score >= tolerance * 100
 
 
-class SimilarNarrations(APIView):
+class SimilarNarrations(LoggingMixin):
     permission_classes = [PublicContentPermission]
     lang_splitter = 'ظظظ'
     tolerance = 0.7
@@ -918,7 +919,7 @@ def duplicate_narration(original_narration, new_owner):
     return new_narration
 
 
-class DuplicateNarrationVS(APIView):
+class DuplicateNarrationVS(LoggingMixin):
     permission_classes = [DuplicateNarrationPermission]
 
     def post(self, request, *args, **kwargs):
@@ -943,7 +944,7 @@ def move_narration_to_main_site(*args, **kwargs):
         return new_narration
 
 
-class MoveToMainSiteNarrationVS(APIView):
+class MoveToMainSiteNarrationVS(LoggingMixin):
     permission_classes = [DuplicateNarrationPermission]
 
     def post(self, request, *args, **kwargs):
@@ -960,7 +961,7 @@ class MoveToMainSiteNarrationVS(APIView):
             return Response(NarrationSerializer(new_narration).data, status=status.HTTP_201_CREATED)
 
 
-class DownloadNarrationVS(APIView):
+class DownloadNarrationVS(LoggingMixin):
     content_color = RGBColor(16, 40, 190)
     translation_color = RGBColor(0, 0, 0)
     narrator_color = RGBColor(165, 45, 45)
@@ -1245,7 +1246,7 @@ class DownloadNarrationVS(APIView):
             zip_buffer.close()
 
 
-class DownloadNarrationBackupVS(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin, ):
+class DownloadNarrationBackupVS(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin,LoggingMixin ):
     def list(self, request, *args, **kwargs):
         folder_path = os.path.join('zipBackup')
         return Response([os.listdir(folder_path)[-1]], status=status.HTTP_200_OK)
@@ -1262,7 +1263,7 @@ class DownloadNarrationBackupVS(viewsets.GenericViewSet, mixins.RetrieveModelMix
             return HttpResponseNotFound('File not found')
 
 
-class DownloadInstructionVS(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin, ):
+class DownloadInstructionVS(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin,LoggingMixin ):
     def retrieve(self, request, *args, **kwargs):
         filename = 'Media1.mp4'
         file_path = os.path.join('Media', filename)
