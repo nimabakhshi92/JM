@@ -170,3 +170,46 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "TOKEN_OBTAIN_SERIALIZER": "ahadis.serializers.MyTokenObtainPairSerializer",
 }
+
+from datetime import datetime
+# Function to get the directory path for logs with nested folders
+
+
+# Function to get the directory path for logs with nested folders
+def get_hourly_log_file_path():
+    base_dir = os.path.join( 'logs')
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)  # Create base directory if not exists
+    today_dir = os.path.join(base_dir, datetime.now().strftime('%Y/%m/%d'))
+    if not os.path.exists(today_dir):
+        os.makedirs(today_dir)  # Create date-based directory if not exists
+    return os.path.join(today_dir, 'request.log')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s [%(levelname)s] %(message)s (%(filename)s:%(lineno)s)',
+        },
+    },
+    'handlers': {
+        'timed_rotating_file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': get_hourly_log_file_path(),  # Use the custom path function
+            'when': 'H',  # Rotate every hour
+            'interval': 1,
+            'backupCount': 240,  # Keep logs for the last 24 hours
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['timed_rotating_file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

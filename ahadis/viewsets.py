@@ -32,6 +32,45 @@ import os
 import re
 from django.conf import settings
 
+import logging
+
+
+class LoggingMixin(APIView):
+    """
+    Provides full logging of requests and responses
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.logger = logging.getLogger('django.request')
+
+    def initial(self, request, *args, **kwargs):
+        try:
+            self.logger.debug({
+                "request": request.data,
+                "method": request.method,
+                "endpoint": request.path,
+                "user": request.user.username,
+                "ip_address": request.META.get('REMOTE_ADDR'),
+                "user_agent": request.META.get('HTTP_USER_AGENT')
+            })
+        except Exception:
+            self.logger.exception("Error logging request data")
+        super().initial(request, *args, **kwargs)
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        try:
+            self.logger.debug({
+                "response": json.dumps(response.data)[:100],
+                "status_code": response.status_code,
+                "user": request.user.username,
+                "ip_address": request.META.get('REMOTE_ADDR'),
+                "user_agent": request.META.get('HTTP_USER_AGENT')
+            })
+        except Exception:
+            self.logger.exception("Error logging response data")
+        return super().finalize_response(request, response, *args, **kwargs)
+
 
 class BaseListCreateDestroyVS(viewsets.GenericViewSet, mixins.CreateModelMixin,
                               mixins.DestroyModelMixin, mixins.ListModelMixin):
@@ -253,7 +292,6 @@ class TableOfContentsViewNew(APIView):
                     'subjects_3': []
                 }
                 subject_data['sub_subjects'].append(sub_subject_data)
-
 
         serializer = AlphabetSerializer(data=list(data.values()), many=True)
         serializer.is_valid(raise_exception=True)
@@ -625,13 +663,13 @@ class NarrationFootnoteVS(BaseCreateUpdateDestroyVS):
     permission_classes = [NarrationRelatedFieldPermission]
 
 
-class ContentSummaryTreeVS(BaseListCreateUpdateDestroyVS):
+class ContentSummaryTreeVS(BaseListCreateUpdateDestroyVS, LoggingMixin):
     serializer_class = ContentSummaryTreeSerializer
     queryset = ContentSummaryTree.objects.all()
     permission_classes = [NarrationRelatedFieldPermission]
 
 
-class FilterOptionsVS(generics.ListAPIView):
+class FilterOptionsVS(generics.ListAPIView, LoggingMixin):
     serializer_class = FilterOptionsSerializer
     permission_classes = [PublicContentPermission]
     queryset = Narration.objects.all().values(
@@ -655,6 +693,7 @@ def word_is_in_splited_text(word, splited):
         return 1
     else:
         return 0
+
 
 
 from fuzzywuzzy import fuzz
@@ -1228,7 +1267,6 @@ class DownloadInstructionVS(viewsets.GenericViewSet, mixins.RetrieveModelMixin, 
         filename = 'Media1.mp4'
         file_path = os.path.join('Media', filename)
         return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=filename)
-
 
 # class SpeedTestVS(APIView):
 #     permission_classes = [IsAuthenticatedOrReadOnly]

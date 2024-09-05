@@ -5,3 +5,4 @@ build.py
 env.py
 zipBackup
 Media
+logs
