@@ -199,7 +199,7 @@ LOGGING = {
             'filename': get_hourly_log_file_path(),  # Use the custom path function
             'when': 'H',  # Rotate every hour
             'interval': 1,
-            'backupCount': 240,  # Keep logs for the last 24 hours
+            'backupCount': 24,  # Keep logs for the last 24 hours
             'formatter': 'verbose',
             'encoding': 'utf-8',
         },
