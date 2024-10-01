@@ -406,6 +406,62 @@ class SurahTableOfContentsView(LoggingMixin):
         return Response(serializer.validated_data)
 
 
+class SurahTableOfContentsViewNew(LoggingMixin):
+    permission_classes = [PublicContentPermission]
+
+    def get(self, request):
+        user_id = int(self.request.query_params.get('user_id', -1))
+        request_user = self.request.user
+        queryset = NarrationSubjectVerse.objects.all()
+
+        if request_user.id == user_id:
+            queryset = queryset.filter(models.Q(content_summary_tree__narration__owner__id=user_id))
+        elif user_id == -1:
+            queryset = queryset.filter(
+                models.Q(content_summary_tree__narration__owner__is_superuser=True) | models.Q(
+                    content_summary_tree__narration__owner=None))
+        else:
+            queryset = queryset.none()
+
+        queryset = queryset.filter(content_summary_tree__alphabet='بیان').values(
+            'quran_verse__surah_no', 'quran_verse__surah_name', 'quran_verse__verse_no', 'quran_verse__verse_content',
+        ).distinct().order_by('quran_verse__surah_no', 'quran_verse__verse_no',)
+
+        data = {}
+        for item in queryset:
+            surah_no = item['quran_verse__surah_no']
+            surah_name = item['quran_verse__surah_name']
+            verse_no = item['quran_verse__verse_no']
+            verse_content = item['quran_verse__verse_content']
+
+            if surah_no not in data:
+                data[surah_no] = {
+                    'surah_no': surah_no,
+                    'surah_name': surah_name,
+                    'verses': []
+                }
+
+            surah_data = data[surah_no]
+            verses_data = next(
+                (sub for sub in surah_data['verses'] if sub['verse_no'] == verse_no),
+                None
+            )
+
+            if verses_data is None:
+                verses_data = {
+                    'verse_no': verse_no,
+                    'verse_content': verse_content,
+                    'sub_subjects': []
+                }
+                surah_data['verses'].append(verses_data)
+
+        serializer = SurahSerializer(data=list(data.values()), many=True)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.validated_data)
+
+
+
 class VersesTableOfContentsView(LoggingMixin):
     permission_classes = [PublicContentPermission]
 
@@ -501,6 +557,71 @@ class VersesTableOfContentsView(LoggingMixin):
                 'summary': summary
             }
             subjects_4_data['content'].append(content_data)
+
+        serializer = AlphabetSerializer(data=list(data.values()), many=True)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.validated_data)
+
+
+class VersesTableOfContentsViewNew(LoggingMixin):
+    permission_classes = [PublicContentPermission]
+
+    def get(self, request):
+        user_id = int(self.request.query_params.get('user_id', -1))
+        request_user = self.request.user
+        queryset = NarrationSubjectVerse.objects.all()
+
+        if request_user.id == user_id:
+            queryset = queryset.filter(models.Q(content_summary_tree__narration__owner__id=user_id))
+        elif user_id == -1:
+            queryset = queryset.filter(
+                models.Q(content_summary_tree__narration__owner__is_superuser=True) | models.Q(
+                    content_summary_tree__narration__owner=None))
+        else:
+            queryset = queryset.none()
+
+        queryset = queryset.values(
+            'content_summary_tree__alphabet', 'content_summary_tree__subject_1', 'content_summary_tree__subject_2',
+        ).distinct().order_by('content_summary_tree__alphabet', 'content_summary_tree__subject_1',
+                              'content_summary_tree__subject_2')
+
+        data = {}
+        for item in queryset:
+            alphabet = item['content_summary_tree__alphabet']
+            subject = item['content_summary_tree__subject_1']
+            sub_subject = item['content_summary_tree__subject_2']
+
+            if alphabet not in data:
+                data[alphabet] = {
+                    'alphabet': alphabet,
+                    'subjects': []
+                }
+
+            alphabet_data = data[alphabet]
+            subject_data = next(
+                (sub for sub in alphabet_data['subjects'] if sub['title'] == subject),
+                None
+            )
+
+            if subject_data is None:
+                subject_data = {
+                    'title': subject,
+                    'sub_subjects': []
+                }
+                alphabet_data['subjects'].append(subject_data)
+
+            sub_subject_data = next(
+                (sub for sub in subject_data['sub_subjects'] if sub['title'] == sub_subject),
+                None
+            )
+
+            if sub_subject_data is None:
+                sub_subject_data = {
+                    'title': sub_subject,
+                    'subjects_3': []
+                }
+                subject_data['sub_subjects'].append(sub_subject_data)
 
         serializer = AlphabetSerializer(data=list(data.values()), many=True)
         serializer.is_valid(raise_exception=True)

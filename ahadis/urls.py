@@ -51,10 +51,10 @@ urlpatterns = [
     path('api/login/', viewsets.MyTokenObtainPairView.as_view(), name='login'),
     path('api/token/refresh/', viewsets.MyTokenRefreshView.as_view(), name='token_refresh'),
 
-    path('api/table_of_contents/', viewsets.TableOfContentsView.as_view(), name='table_of_contents'),
-    path('api/verses_table_of_contents/', viewsets.VersesTableOfContentsView.as_view(),
+    path('api/table_of_contents/', viewsets.TableOfContentsViewNew.as_view(), name='table_of_contents'),
+    path('api/verses_table_of_contents/', viewsets.VersesTableOfContentsViewNew.as_view(),
          name='verses_table_of_contents'),
-    path('api/surah_table_of_contents/', viewsets.SurahTableOfContentsView.as_view(),
+    path('api/surah_table_of_contents/', viewsets.SurahTableOfContentsViewNew.as_view(),
          name='surah_table_of_contents'),
 
     # path('api/narrations_list/', viewsets.NarrationVS.as_view(), name='narrations_list'),
