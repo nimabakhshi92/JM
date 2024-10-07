@@ -732,6 +732,67 @@ class NarrationVS(BaseListCreateRetrieveUpdateDestroyVS):
             return Response(serialized.data, status=status.HTTP_201_CREATED)
 
 
+class NarrationSummaryVS(viewsets.GenericViewSet, mixins.ListModelMixin,LoggingMixin):
+    permission_classes = [PublicContentPermission]
+    pagination_class = MyPagination
+    serializer_class = NarrationSummarySerializer
+
+    def get_queryset(self):
+        alphabet = self.request.query_params.get('alphabet', None)
+        subject = self.request.query_params.get('subject', None)
+        sub_subject = self.request.query_params.get('sub_subject', None)
+
+        surah_name = self.request.query_params.get('surah_name', None)
+        verse_no = self.request.query_params.get('verse_no', None)
+        user_id = int(self.request.query_params.get('user_id', -1))
+        request_user = self.request.user
+
+        queryset = Narration.objects.all()
+
+        queryset = filter_out_forbidden_queryset_items(queryset, request_user.id, user_id)
+        if alphabet:
+            queryset = queryset.filter(content_summary_tree__alphabet=alphabet).distinct()
+        if subject:
+            queryset = queryset.filter(content_summary_tree__subject_1=subject).distinct()
+        if sub_subject:
+            queryset = queryset.filter(content_summary_tree__subject_2=sub_subject).distinct()
+
+        if surah_name:
+            queryset = queryset.filter(content_summary_tree__verse__quran_verse__surah_name=surah_name).distinct()
+        if verse_no:
+            queryset = queryset.filter(content_summary_tree__verse__quran_verse__verse_no=verse_no).distinct()
+
+        queryset = queryset.prefetch_related(
+            'narration_verses', 'content_summary_tree').prefetch_related(
+            Prefetch("bookmarks", queryset=Bookmark.objects.filter(user=request_user))
+        ).annotate(
+            bookmarks_count=Count('bookmarks', filter=Q(bookmarks__user=request_user)),
+            content_summary_tree_last_modified=Max('content_summary_tree__modified'),
+            last_modified=Greatest(
+                'modified',
+                'content_summary_tree_last_modified',
+            )
+        )
+
+        sort_by = self.request.query_params.get('sort_by', 'modified')
+        if sort_by == 'modified':
+            sort_by = 'last_modified'
+        sort_type = self.request.query_params.get('sort_type', None)
+        sort_type = '' if sort_type == 'asc' else '-'
+
+        return queryset.distinct().order_by(f'{sort_type}{sort_by}')
+
+    def create(self, request, *args, **kwargs):
+        user = request.user.id
+        data = request.data
+        data['user_id'] = user
+        serialized = NarrationSerializer(data=data)
+        if serialized.is_valid():
+            serialized.save()
+            return Response(serialized.data, status=status.HTTP_201_CREATED)
+
+
+
 class BookVS(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
              viewsets.GenericViewSet,LoggingMixin):
     permission_classes = [PublicContentPermission]

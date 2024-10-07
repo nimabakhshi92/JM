@@ -129,6 +129,12 @@ class ContentSummaryTreeSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ContentSummaryTreeSerializerRelatedFieldLimited(serializers.ModelSerializer):
+    class Meta:
+        model = ContentSummaryTree
+        fields = ['id', 'subject_3', 'expression', 'summary']
+
+
 class NarrationSubjectVerseSerializer(serializers.ModelSerializer):
     quran_verse = QuranVerseSerializer()
 
@@ -263,6 +269,46 @@ class NarrationSerializer(serializers.ModelSerializer):
                 pass
 
         return narration
+
+
+class NarrationSerializerForSharedNarrations(serializers.ModelSerializer):
+    content = serializers.SerializerMethodField()
+    book = BookRelatedSerializer(read_only=True)
+
+    class Meta:
+        model = Narration
+        fields = ['id', 'name', 'content', 'book', 'book_vol_no', 'book_page_no']
+
+    def get_content(self, obj):
+        return obj.content[0:150]
+
+    # def get_is_bookmarked(self, obj):
+    #     if hasattr(obj, 'bookmarks_count'):
+    #         return obj.bookmarks_count > 0
+
+
+class NarrationSummarySerializer(serializers.ModelSerializer):
+    content_summary_tree = ContentSummaryTreeSerializerRelatedFieldLimited(many=True, read_only=True)
+    is_bookmarked = serializers.SerializerMethodField(read_only=True)
+    status = serializers.CharField(source='shared_narration.status', read_only=True)
+    imam = ImamSerializer()
+
+    # bookmarks = BSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Narration
+        fields = [
+            'id',
+            'content_summary_tree',
+            'is_bookmarked',
+            'status',
+            'imam',
+        ]
+        # fields = '__all__'
+
+    def get_is_bookmarked(self, obj):
+        if hasattr(obj, 'bookmarks_count'):
+            return obj.bookmarks_count > 0
 
 
 class FilterOptionsSerializer(serializers.ModelSerializer):
@@ -419,7 +465,8 @@ class BookmarkSerializer(serializers.ModelSerializer):
 
 
 class SharedNarrationsSerializer(serializers.ModelSerializer):
-    narration = NarrationSerializer(read_only=True)
+    # narration = NarrationSerializer(read_only=True)
+    narration = NarrationSerializerForSharedNarrations(read_only=True)
     narration_id = serializers.IntegerField(write_only=True)
     sender = MyUserRegisterSerializer(read_only=True)
     sender_id = serializers.IntegerField(write_only=True)
