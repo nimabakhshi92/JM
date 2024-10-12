@@ -999,9 +999,9 @@ class SharedNarrationsVS(BaseListCreateRetrieveUpdateDestroyVS):
 
         # return SharedNarrations.objects.all()
         if is_checker_admin(request_user):
-            return SharedNarrations.objects.all()
+            return SharedNarrations.objects.select_related().all()
         if is_a_non_checker_admin(request_user):
-            return SharedNarrations.objects.filter(sender=request_user)
+            return SharedNarrations.objects.select_related().filter(sender=request_user)
 
     def get_serializer_class(self):
         if self.action == 'partial_update':
